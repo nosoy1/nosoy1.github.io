@@ -1,0 +1,2752 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover"
+    />
+    <title>책모아 — 도서관 통합 검색</title>
+    <meta
+      name="description"
+      content="광양의 공공·대학·기업 도서관에 흩어진 책을 한 번에 검색합니다. 가까운 도서관부터 소장 여부와 대출 가능 여부를 확인하세요."
+    />
+    <meta name="theme-color" content="#FFD21E" />
+    <meta property="og:title" content="책모아 — 도서관 통합 검색" />
+    <meta property="og:description" content="여러 도서관에 흩어진 책을, 한 번에." />
+    <meta property="og:type" content="website" />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='15' fill='%23FFD21E'/%3E%3Cpath d='M22 13h20a4 4 0 0 1 4 4v35L32 43 18 52V17a4 4 0 0 1 4-4z' fill='%2317150f'/%3E%3C/svg%3E"
+    />
+    <style>
+/* =========================================================
+   책모아 — 스타일
+   노란 헤더 · 종이 질감의 배경 · 카드형 결과
+   ========================================================= */
+:root {
+  --yellow: #ffd21e;
+  --yellow-deep: #f2c000;
+  --ink: #17150f;
+  --ink-2: #3d392f;
+  --muted: #7d7666;
+  --paper: #ffffff;
+  --bg: #f6f3ea;
+  --bg-deep: #efeade;
+  --line: #e7e1d2;
+  --line-strong: #d5cdb8;
+
+  --green: #0b7a4b;
+  --green-bg: #e7f6ee;
+  --amber: #a85b00;
+  --amber-bg: #fdf1dc;
+  --gray: #6b675c;
+  --gray-bg: #f0eee7;
+  --blue: #1d4ed8;
+  --blue-bg: #e9eefc;
+  --purple: #6d28d9;
+  --purple-bg: #f0eafd;
+
+  --radius: 22px;
+  --shadow: 0 24px 48px -28px rgba(35, 28, 10, 0.45);
+  --font: "Pretendard Variable", Pretendard, -apple-system,
+    BlinkMacSystemFont, "Apple SD Gothic Neo", "Malgun Gothic",
+    "Noto Sans KR", "Segoe UI", sans-serif;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font);
+  font-size: 16px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+::selection {
+  background: var(--yellow);
+  color: var(--ink);
+}
+
+button,
+input {
+  font: inherit;
+  color: inherit;
+}
+
+button {
+  -webkit-tap-highlight-color: transparent;
+}
+
+a {
+  color: inherit;
+}
+
+:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+  border-radius: 8px;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ---------- 공통 레이아웃 ---------- */
+#app {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+}
+
+.page {
+  width: min(680px, 100%);
+  margin: 0 auto;
+  padding: 0 18px 48px;
+  flex: 1;
+}
+
+.page--flush {
+  padding-top: 18px;
+}
+
+/* ---------- 히어로 ---------- */
+.hero {
+  position: relative;
+  overflow: hidden;
+  background: var(--yellow);
+  padding: 30px 18px 82px;
+  isolation: isolate;
+}
+
+.hero::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background-image: radial-gradient(rgba(0, 0, 0, 0.13) 1px, transparent 1px);
+  background-size: 15px 15px;
+  -webkit-mask-image: linear-gradient(115deg, transparent 35%, #000 100%);
+  mask-image: linear-gradient(115deg, transparent 35%, #000 100%);
+  opacity: 0.55;
+}
+
+.hero__inner {
+  width: min(644px, 100%);
+  margin: 0 auto;
+}
+
+.hero__eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  color: rgba(23, 21, 15, 0.62);
+}
+
+.hero__eyebrow::before {
+  content: "";
+  width: 18px;
+  height: 2px;
+  background: currentColor;
+}
+
+.hero h1 {
+  margin: 10px 0 6px;
+  font-size: clamp(42px, 12vw, 58px);
+  line-height: 1;
+  font-weight: 900;
+  letter-spacing: -0.055em;
+}
+
+.hero h1 .dot {
+  color: #fff;
+}
+
+.hero__sub {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: rgba(23, 21, 15, 0.68);
+}
+
+/* ---------- 검색 카드 ---------- */
+.search-card {
+  position: relative;
+  z-index: 2;
+  margin-top: -58px;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 26px;
+  box-shadow: var(--shadow);
+  padding: 18px;
+}
+
+.field {
+  position: relative;
+}
+
+.field__icon {
+  position: absolute;
+  left: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--muted);
+  pointer-events: none;
+  display: flex;
+}
+
+.field input {
+  width: 100%;
+  height: 56px;
+  padding: 0 16px 0 46px;
+  border: 1.5px solid var(--line-strong);
+  border-radius: 16px;
+  background: #fcfbf6;
+  font-size: 16px;
+  font-weight: 600;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.field input::placeholder {
+  color: #a9a291;
+  font-weight: 500;
+}
+
+.field input:focus {
+  outline: none;
+  border-color: var(--ink);
+  background: #fff;
+}
+
+.opt {
+  margin-top: 16px;
+}
+
+.opt__label {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 9px;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  color: var(--muted);
+}
+
+.opt__label em {
+  font-style: normal;
+  font-weight: 700;
+  color: var(--ink-2);
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  border: 1px solid var(--line-strong);
+  background: #fff;
+  color: #4c473b;
+  border-radius: 999px;
+  padding: 8px 13px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.chip:hover {
+  border-color: var(--ink);
+}
+
+.chip.is-on {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: #fff;
+}
+
+.chip:disabled {
+  opacity: 0.42;
+  cursor: not-allowed;
+  border-style: dashed;
+}
+
+.chip__soon {
+  font-size: 9.5px;
+  font-weight: 700;
+  color: var(--muted);
+  border-left: 1px solid currentColor;
+  padding-left: 6px;
+  margin-left: 1px;
+  opacity: 0.9;
+}
+
+.chip__dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--yellow-deep);
+}
+
+.chip.is-on .chip__dot {
+  background: var(--yellow);
+}
+
+.chip--public .chip__dot {
+  background: var(--green);
+}
+
+.chip--university .chip__dot {
+  background: var(--blue);
+}
+
+.chip--corporate .chip__dot {
+  background: var(--purple);
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 54px;
+  padding: 0 22px;
+  border: 0;
+  border-radius: 16px;
+  font-size: 16px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: transform 0.12s ease, background 0.15s ease;
+}
+
+.btn:active {
+  transform: translateY(1px);
+}
+
+.btn--primary {
+  width: 100%;
+  margin-top: 18px;
+  background: var(--ink);
+  color: #fff;
+}
+
+.btn--primary:hover {
+  background: #000;
+}
+
+.btn--ghost {
+  background: #fff;
+  border: 1px solid var(--line-strong);
+  color: var(--ink);
+  height: 48px;
+  font-size: 14px;
+}
+
+.btn--ghost:hover {
+  border-color: var(--ink);
+}
+
+/* ---------- 최근 검색어 ---------- */
+.recent {
+  margin-top: 26px;
+}
+
+.recent__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.recent__head h2 {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--muted);
+  letter-spacing: 0.02em;
+}
+
+.recent__clear {
+  border: 0;
+  background: none;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 4px;
+}
+
+.recent__clear:hover {
+  color: var(--ink);
+}
+
+.recent__list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.recent__item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid var(--line);
+  background: #fff;
+  border-radius: 11px;
+  padding: 8px 12px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink-2);
+  cursor: pointer;
+}
+
+.recent__item:hover {
+  border-color: var(--line-strong);
+  background: #fffdf7;
+}
+
+/* ---------- 섹션 ---------- */
+.section {
+  margin-top: 34px;
+}
+
+.section__title {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin: 0 0 6px;
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--muted);
+  letter-spacing: 0.02em;
+}
+
+.section__title b {
+  color: var(--ink);
+}
+
+.liblist {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.librow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 13px 2px;
+  border-bottom: 1px dashed var(--line);
+}
+
+.librow:last-child {
+  border-bottom: 0;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  min-width: 34px;
+  padding: 4px 7px;
+  border-radius: 7px;
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+}
+
+.badge--public {
+  background: var(--green-bg);
+  color: var(--green);
+}
+
+.badge--university {
+  background: var(--blue-bg);
+  color: var(--blue);
+}
+
+.badge--corporate {
+  background: var(--purple-bg);
+  color: var(--purple);
+}
+
+.librow__body {
+  min-width: 0;
+  flex: 1;
+}
+
+.librow__name {
+  margin: 0;
+  font-size: 14.5px;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.librow__meta {
+  margin: 2px 0 0;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.librow__right {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--ink-2);
+  text-align: right;
+  flex: none;
+}
+
+.librow.is-off .librow__name,
+.librow.is-off .librow__right {
+  color: #a49c88;
+}
+
+/* ---------- 상단 바 ---------- */
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 14px;
+  background: rgba(246, 243, 234, 0.86);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--line);
+}
+
+.topbar__spacer {
+  flex: 1;
+}
+
+.topbar__title {
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+
+.iconbtn {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  flex: none;
+  border: 1px solid var(--line);
+  border-radius: 13px;
+  background: #fff;
+  cursor: pointer;
+  color: var(--ink);
+}
+
+.iconbtn:hover {
+  border-color: var(--line-strong);
+}
+
+/* ---------- 책 헤더 ---------- */
+.bookhead {
+  display: flex;
+  gap: 15px;
+  align-items: flex-start;
+  margin-top: 20px;
+}
+
+.cover {
+  position: relative;
+  display: block;
+  flex: none;
+  width: 68px;
+  height: 96px;
+  border-radius: 7px;
+  overflow: hidden;
+  background: linear-gradient(150deg, #3a3a3a, #141414);
+  box-shadow: 0 8px 18px -10px rgba(0, 0, 0, 0.55);
+}
+
+.cover--lg {
+  width: 96px;
+  height: 136px;
+}
+
+.cover--sm {
+  width: 44px;
+  height: 62px;
+  border-radius: 5px;
+}
+
+.cover img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: 2;
+}
+
+.cover__fallback {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 6px;
+  color: rgba(255, 255, 255, 0.92);
+  font-size: 26px;
+  font-weight: 900;
+  text-align: center;
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+  word-break: keep-all;
+}
+
+.cover--sm .cover__fallback {
+  font-size: 17px;
+}
+
+.bookhead__body {
+  min-width: 0;
+  padding-top: 2px;
+}
+
+.bookhead__title {
+  margin: 0;
+  font-size: 21px;
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  line-height: 1.25;
+}
+
+.bookhead__meta {
+  margin: 5px 0 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.bookhead__stats {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 7px;
+  margin-top: 10px;
+}
+
+.stat-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 9px;
+  border-radius: 999px;
+  background: var(--bg-deep);
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--ink-2);
+}
+
+.stat-pill--accent {
+  background: var(--yellow);
+  color: var(--ink);
+}
+
+/* ---------- 후보 책 스트립 ---------- */
+.strip {
+  display: flex;
+  gap: 9px;
+  overflow-x: auto;
+  padding: 4px 2px 10px;
+  margin: 14px -2px 0;
+  scrollbar-width: none;
+}
+
+.strip::-webkit-scrollbar {
+  display: none;
+}
+
+.strip__item {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  flex: none;
+  max-width: 210px;
+  padding: 7px 11px 7px 7px;
+  border: 1.5px solid var(--line);
+  border-radius: 13px;
+  background: #fff;
+  cursor: pointer;
+  text-align: left;
+}
+
+.strip__item.is-active {
+  border-color: var(--ink);
+  box-shadow: 0 0 0 2px rgba(23, 21, 15, 0.06);
+}
+
+.strip__title {
+  font-size: 12.5px;
+  font-weight: 700;
+  line-height: 1.3;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* ---------- 결과 카드 ---------- */
+.result-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 16px 0 2px;
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--muted);
+}
+
+.libcards {
+  margin-top: 10px;
+}
+
+.libcard {
+  position: relative;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 19px;
+  padding: 15px 16px 13px;
+  margin-bottom: 11px;
+  box-shadow: 0 1px 0 rgba(23, 21, 15, 0.03);
+  animation: rise 0.32s cubic-bezier(0.22, 0.7, 0.2, 1) both;
+}
+
+.libcard.is-missing {
+  background: #fbfaf5;
+  border-style: dashed;
+}
+
+.libcard__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.libcard__dist {
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--ink);
+  display: inline-flex;
+  align-items: baseline;
+  gap: 3px;
+}
+
+.libcard__dist span {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--muted);
+}
+
+.libcard__name {
+  margin: 8px 0 0;
+  font-size: 17px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.3;
+}
+
+.libcard__meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin-top: 7px;
+}
+
+.fmt {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--muted);
+}
+
+.status {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  font-size: 11.5px;
+  font-weight: 800;
+}
+
+.status::before {
+  content: "";
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.status--available {
+  background: var(--green-bg);
+  color: var(--green);
+}
+
+.status--loaned {
+  background: var(--amber-bg);
+  color: var(--amber);
+}
+
+.status--missing {
+  background: var(--gray-bg);
+  color: var(--gray);
+}
+
+.status--unknown {
+  background: var(--gray-bg);
+  color: var(--gray);
+}
+
+.libcard__hint {
+  margin: 7px 0 0;
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.45;
+}
+
+.libcard__foot {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-top: 11px;
+  padding-top: 10px;
+  border-top: 1px solid var(--line);
+}
+
+.link {
+  border: 0;
+  background: none;
+  padding: 0;
+  font-size: 12.5px;
+  font-weight: 800;
+  color: var(--ink);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-thickness: 1.5px;
+  cursor: pointer;
+}
+
+.link--muted {
+  color: var(--muted);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.link--muted:hover {
+  color: var(--ink);
+}
+
+.disclaimer {
+  margin: 18px 2px 0;
+  font-size: 11.5px;
+  line-height: 1.6;
+  color: #9c9482;
+}
+
+/* ---------- 로딩 ---------- */
+.loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 56px 20px 30px;
+}
+
+.loading h2 {
+  margin: 18px 0 4px;
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.loading p {
+  margin: 0;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.dots {
+  display: inline-flex;
+  gap: 6px;
+}
+
+.dots i {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--ink);
+  opacity: 0.25;
+  animation: blink 1.05s infinite ease-in-out;
+}
+
+.dots i:nth-child(2) {
+  animation-delay: 0.15s;
+}
+
+.dots i:nth-child(3) {
+  animation-delay: 0.3s;
+}
+
+.skeleton {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  padding: 16px;
+  margin-bottom: 11px;
+}
+
+.sk-line {
+  height: 12px;
+  border-radius: 6px;
+  background: linear-gradient(90deg, #f0ece1 25%, #f8f5ec 37%, #f0ece1 63%);
+  background-size: 400% 100%;
+  animation: shimmer 1.3s infinite linear;
+}
+
+.sk-line + .sk-line {
+  margin-top: 9px;
+}
+
+.sk-line--short {
+  width: 45%;
+}
+
+/* ---------- 빈 상태 / 오류 ---------- */
+.state {
+  text-align: center;
+  padding: 60px 18px 40px;
+  animation: rise 0.3s ease both;
+}
+
+.state__emoji {
+  font-size: 46px;
+  line-height: 1;
+}
+
+.state h2 {
+  margin: 18px 0 6px;
+  font-size: 19px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.state p {
+  margin: 0 auto;
+  max-width: 340px;
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: var(--muted);
+}
+
+.state__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 9px;
+  margin-top: 24px;
+}
+
+.state__actions .btn {
+  width: auto;
+  min-width: 140px;
+  margin: 0;
+}
+
+.suggest {
+  margin-top: 30px;
+}
+
+.suggest__label {
+  font-size: 11.5px;
+  font-weight: 800;
+  color: var(--muted);
+  letter-spacing: 0.04em;
+}
+
+/* ---------- 상세 ---------- */
+.detail-hero {
+  display: flex;
+  gap: 18px;
+  margin-top: 22px;
+  align-items: flex-start;
+}
+
+.detail-hero__body {
+  min-width: 0;
+}
+
+.detail-hero h1 {
+  margin: 2px 0 0;
+  font-size: 24px;
+  font-weight: 900;
+  line-height: 1.22;
+  letter-spacing: -0.03em;
+}
+
+.detail-hero__meta {
+  margin: 7px 0 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.detail-hero__isbn {
+  margin: 10px 0 0;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #a29a88;
+  font-variant-numeric: tabular-nums;
+}
+
+.desc {
+  margin: 22px 0 0;
+  padding: 15px 16px;
+  border-radius: 15px;
+  background: #fff;
+  border: 1px solid var(--line);
+  font-size: 13.5px;
+  line-height: 1.65;
+  color: var(--ink-2);
+}
+
+.holdings {
+  margin-top: 30px;
+}
+
+.holdings h2 {
+  margin: 0 0 10px;
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--muted);
+}
+
+.holding {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 13px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.holding:last-child {
+  border-bottom: 0;
+}
+
+.holding__body {
+  flex: 1;
+  min-width: 0;
+}
+
+.holding__name {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.holding__meta {
+  margin: 3px 0 0;
+  font-size: 11.5px;
+  color: var(--muted);
+}
+
+.holding__right {
+  text-align: right;
+  flex: none;
+}
+
+.holding__dist {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--muted);
+  margin-top: 4px;
+}
+
+.detail__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px;
+  margin-top: 26px;
+}
+
+/* ---------- 푸터 ---------- */
+.foot {
+  margin-top: auto;
+  padding: 26px 18px 34px;
+  border-top: 1px solid var(--line);
+  text-align: center;
+  font-size: 11px;
+  line-height: 1.7;
+  color: #a49c88;
+}
+
+.foot b {
+  color: #8a8270;
+  font-weight: 700;
+}
+
+/* ---------- 토스트 ---------- */
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: 30px;
+  transform: translateX(-50%);
+  z-index: 60;
+  padding: 11px 18px;
+  border-radius: 999px;
+  background: var(--ink);
+  color: #fff;
+  font-size: 12.5px;
+  font-weight: 700;
+  box-shadow: 0 12px 30px -10px rgba(0, 0, 0, 0.5);
+  animation: toast-in 0.2s ease both;
+  pointer-events: none;
+}
+
+/* ---------- 애니메이션 ---------- */
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes blink {
+  0%,
+  80%,
+  100% {
+    opacity: 0.2;
+    transform: scale(0.85);
+  }
+  40% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes shimmer {
+  from {
+    background-position: 100% 0;
+  }
+  to {
+    background-position: -100% 0;
+  }
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 8px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+@media (min-width: 720px) {
+  .hero {
+    padding-top: 42px;
+    padding-bottom: 96px;
+  }
+
+  .search-card {
+    padding: 22px;
+    margin-top: -64px;
+  }
+
+  .libcard {
+    padding: 18px 20px 15px;
+  }
+}
+
+</style>
+  </head>
+  <body>
+    <div id="app"></div>
+
+    <noscript>
+      <div
+        style="
+          max-width: 560px;
+          margin: 80px auto;
+          padding: 24px;
+          border: 1px solid #e7e1d2;
+          border-radius: 18px;
+          background: #fff;
+          font-family: sans-serif;
+          line-height: 1.6;
+        "
+      >
+        <strong>JavaScript가 필요합니다.</strong><br />
+        이 앱은 브라우저에서 도서관 API를 호출해 검색 결과를 그립니다. 브라우저
+        설정에서 JavaScript를 켜 주세요.
+      </div>
+    </noscript>
+
+    <script>
+/* =========================================================
+   책모아 — 앱 설정
+   ---------------------------------------------------------
+   배포 후 apiBase 값만 채우면 데모 모드 → 실제 API 모드로
+   전환됩니다. (예: "https://chaekmoa-api.xxxx.workers.dev")
+   ========================================================= */
+window.APP_CONFIG = {
+  appName: "책모아",
+  apiBase: "",
+
+  /* 거리 계산 기준점. "가까운 순" 정렬에 사용됩니다. */
+  origin: { label: "광양시청", lat: 34.9406, lng: 127.6956 },
+
+  /* 검색 대상 도서관.
+     enabled: false 인 곳은 화면에 "준비 중"으로 표시됩니다.
+     lat/lng 는 정렬용 대략 좌표이니 필요하면 수정하세요. */
+  libraries: [
+    {
+      id: "gyangyang",
+      name: "광양도서관",
+      short: "광양도서관",
+      kind: "public",
+      kindLabel: "공공",
+      lat: 34.9412,
+      lng: 127.6958,
+      libCode: "",
+      homepage: "",
+      enabled: true
+    },
+    {
+      id: "jne_gyangyang",
+      name: "전남교육청광양도서관",
+      short: "교육청광양",
+      kind: "public",
+      kindLabel: "공공",
+      lat: 34.9762,
+      lng: 127.5894,
+      libCode: "",
+      homepage: "https://grlib.jne.go.kr",
+      enabled: true
+    },
+    {
+      id: "jnu_gwangju",
+      name: "전남대학교 중앙도서관",
+      short: "전남대(광주)",
+      kind: "university",
+      kindLabel: "대학",
+      lat: 35.1767,
+      lng: 126.9052,
+      libCode: "",
+      homepage: "https://library.jnu.ac.kr",
+      enabled: false
+    },
+    {
+      id: "jnu_yeosu",
+      name: "전남대학교 여수캠퍼스 도서관",
+      short: "전남대(여수)",
+      kind: "university",
+      kindLabel: "대학",
+      lat: 34.7699,
+      lng: 127.7004,
+      libCode: "",
+      homepage: "https://yosulib.jnu.ac.kr",
+      enabled: false
+    },
+    {
+      id: "posco",
+      name: "포스코 도서관",
+      short: "포스코",
+      kind: "corporate",
+      kindLabel: "기업",
+      lat: 36.0194,
+      lng: 129.3435,
+      libCode: "",
+      homepage: "",
+      enabled: false
+    }
+  ]
+};
+
+</script>
+    <script>
+/* =========================================================
+   데모 데이터
+   ---------------------------------------------------------
+   API 키가 없어도 화면 전체 흐름을 확인할 수 있도록 만든
+   샘플 데이터입니다. 실제 서비스에서는 사용되지 않습니다.
+   ========================================================= */
+window.MOCK = {
+  updatedAt: "2026-11-23",
+  books: [
+    {
+      isbn13: "9788934972464",
+      title: "사피엔스",
+      authors: "유발 하라리",
+      publisher: "김영사",
+      year: 2015,
+      formats: ["paper", "ebook"],
+      keywords: ["인류사", "역사", "하라리", "호모사피엔스"],
+      description:
+        "인류의 탄생부터 현재까지, 호모 사피엔스가 세계를 지배하게 된 과정을 추적한 역사서.",
+      holdings: {
+        gyangyang: { has: "Y", loan: "Y" },
+        jne_gyangyang: { has: "Y", loan: "N" },
+        jnu_gwangju: { has: "Y", loan: "N" },
+        jnu_yeosu: { has: "Y", loan: "Y" },
+        posco: { has: "N", loan: "N" }
+      }
+    },
+    {
+      isbn13: "9788936433598",
+      title: "채식주의자",
+      authors: "한강",
+      publisher: "창비",
+      year: 2007,
+      formats: ["paper", "ebook"],
+      keywords: ["소설", "한강", "맨부커", "노벨문학상"],
+      description:
+        "어느 날 육식을 거부하기 시작한 영혜와 그 가족을 통해 욕망과 폭력의 경계를 그린 소설.",
+      holdings: {
+        gyangyang: { has: "Y", loan: "N" },
+        jne_gyangyang: { has: "Y", loan: "Y" },
+        jnu_gwangju: { has: "Y", loan: "Y" },
+        jnu_yeosu: { has: "N", loan: "N" },
+        posco: { has: "Y", loan: "Y" }
+      }
+    },
+    {
+      isbn13: "9788971998557",
+      title: "역사의 역사",
+      authors: "유시민",
+      publisher: "돌베개",
+      year: 2018,
+      formats: ["paper"],
+      keywords: ["역사학", "유시민", "교양"],
+      description:
+        "역사란 무엇인지, 역사가는 어떻게 과거를 해석해 왔는지를 흥미롭게 풀어낸 교양서.",
+      holdings: {
+        gyangyang: { has: "Y", loan: "Y" },
+        jne_gyangyang: { has: "N", loan: "N" },
+        jnu_gwangju: { has: "Y", loan: "N" },
+        jnu_yeosu: { has: "N", loan: "N" },
+        posco: { has: "N", loan: "N" }
+      }
+    },
+    {
+      isbn13: "9788936434267",
+      title: "아몬드",
+      authors: "손원평",
+      publisher: "창비",
+      year: 2017,
+      formats: ["paper", "ebook"],
+      keywords: ["소설", "청소년", "성장"],
+      description:
+        "감정을 느끼지 못하는 소년 윤재가 세상과 부딪히며 성장하는 과정을 담은 장편소설.",
+      holdings: {
+        gyangyang: { has: "N", loan: "N" },
+        jne_gyangyang: { has: "Y", loan: "Y" },
+        jnu_gwangju: { has: "N", loan: "N" },
+        jnu_yeosu: { has: "Y", loan: "N" },
+        posco: { has: "Y", loan: "Y" }
+      }
+    },
+    {
+      isbn13: "9791161571188",
+      title: "불편한 편의점",
+      authors: "김호연",
+      publisher: "나무옆의자",
+      year: 2021,
+      formats: ["paper", "ebook"],
+      keywords: ["소설", "힐링", "김호연"],
+      description:
+        "골목 편의점에 어느 날 나타난 노숙인 독고와 그를 둘러싼 사람들의 이야기.",
+      holdings: {
+        gyangyang: { has: "Y", loan: "Y" },
+        jne_gyangyang: { has: "Y", loan: "Y" },
+        jnu_gwangju: { has: "Y", loan: "Y" },
+        jnu_yeosu: { has: "Y", loan: "Y" },
+        posco: { has: "Y", loan: "N" }
+      }
+    },
+    {
+      isbn13: "9788937460844",
+      title: "어린 왕자",
+      authors: "앙투안 드 생텍쥐페리",
+      publisher: "민음사",
+      year: 2015,
+      formats: ["paper"],
+      keywords: ["고전", "동화", "생텍쥐페리"],
+      description:
+        "사막에 불시착한 비행사와 작은 별에서 온 어린 왕자가 나누는 이야기.",
+      holdings: {
+        gyangyang: { has: "N", loan: "N" },
+        jne_gyangyang: { has: "N", loan: "N" },
+        jnu_gwangju: { has: "Y", loan: "N" },
+        jnu_yeosu: { has: "Y", loan: "Y" },
+        posco: { has: "N", loan: "N" }
+      }
+    }
+  ]
+};
+
+</script>
+    <script>
+/* =========================================================
+   LibCore — 화면과 무관한 순수 로직
+   (거리 계산, 정렬, 데모 검색, 상태 판정)
+   브라우저에서는 window.LibCore, Node에서는 module.exports
+   ========================================================= */
+(function (root, factory) {
+  if (typeof module === "object" && module.exports) {
+    module.exports = factory();
+  } else {
+    root.LibCore = factory();
+  }
+})(typeof self !== "undefined" ? self : this, function () {
+  "use strict";
+
+  var EARTH_R = 6371;
+
+  function toRad(deg) {
+    return (deg * Math.PI) / 180;
+  }
+
+  function haversine(lat1, lng1, lat2, lng2) {
+    var dLat = toRad(lat2 - lat1);
+    var dLng = toRad(lng2 - lng1);
+    var a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(toRad(lat1)) *
+        Math.cos(toRad(lat2)) *
+        Math.sin(dLng / 2) *
+        Math.sin(dLng / 2);
+    return 2 * EARTH_R * Math.asin(Math.min(1, Math.sqrt(a)));
+  }
+
+  function distanceKm(lib, origin) {
+    return haversine(origin.lat, origin.lng, lib.lat, lib.lng);
+  }
+
+  /** 도서관 목록에 km 를 붙여 가까운 순으로 정렬 */
+  function rankLibraries(libs, origin) {
+    return libs
+      .map(function (lib) {
+        return Object.assign({}, lib, { km: distanceKm(lib, origin) });
+      })
+      .sort(function (a, b) {
+        return a.km - b.km;
+      });
+  }
+
+  function formatDistance(km) {
+    if (!isFinite(km)) return "-";
+    if (km < 0.05) return "바로 앞";
+    if (km < 1) {
+      var m = Math.round((km * 1000) / 10) * 10;
+      return Math.max(50, m) + "m";
+    }
+    if (km < 10) return km.toFixed(1) + "km";
+    return Math.round(km) + "km";
+  }
+
+  /** 정보나루 응답(hasBook, loanAvailable)을 화면용 상태로 변환 */
+  function statusOf(hasBook, loanAvailable) {
+    if (hasBook !== "Y" && hasBook !== "N") {
+      return {
+        code: "unknown",
+        label: "확인 불가",
+        hint: "이 도서관의 연동 정보를 확인하지 못했어요."
+      };
+    }
+    if (hasBook !== "Y") {
+      return {
+        code: "missing",
+        label: "미소장",
+        hint: "이 도서관에는 소장되어 있지 않아요."
+      };
+    }
+    if (loanAvailable === "Y") {
+      return {
+        code: "available",
+        label: "대출 가능",
+        hint: "지금 대출할 수 있어요. (전일 기준)"
+      };
+    }
+    if (loanAvailable === "N") {
+      return {
+        code: "loaned",
+        label: "대출 중",
+        hint: "소장 중이지만 지금은 대출 중이에요."
+      };
+    }
+    return {
+      code: "unknown",
+      label: "확인 필요",
+      hint: "소장은 확인됐지만 대출 상태는 도서관에 문의하세요."
+    };
+  }
+
+  function normalize(text) {
+    return String(text == null ? "" : text)
+      .toLowerCase()
+      .replace(/\s+/g, "")
+      .replace(/[().,\-·:;'"]/g, "");
+  }
+
+  /** 데모용 키워드 검색 (제목 > 저자 > 키워드 > 출판사) */
+  function searchMock(query, material, books) {
+    var nq = normalize(query);
+    if (!nq) return [];
+    var pool = (books || []).filter(function (book) {
+      if (!material || material === "all") return true;
+      var formats = book.formats || ["paper"];
+      return formats.indexOf(material) >= 0;
+    });
+
+    var scored = pool
+      .map(function (book) {
+        var title = normalize(book.title);
+        var score = 0;
+        if (title === nq) score = 100;
+        else if (title.indexOf(nq) === 0) score = 85;
+        else if (title.indexOf(nq) >= 0) score = 70;
+        else if (normalize(book.authors).indexOf(nq) >= 0) score = 55;
+        else if (
+          (book.keywords || []).some(function (k) {
+            return normalize(k).indexOf(nq) >= 0;
+          })
+        )
+          score = 40;
+        else if (normalize(book.publisher).indexOf(nq) >= 0) score = 20;
+        return { book: book, score: score };
+      })
+      .filter(function (row) {
+        return row.score > 0;
+      });
+
+    scored.sort(function (a, b) {
+      return b.score - a.score || (b.book.year || 0) - (a.book.year || 0);
+    });
+    return scored.map(function (row) {
+      return row.book;
+    });
+  }
+
+  function hashString(text) {
+    var h = 0;
+    for (var i = 0; i < text.length; i += 1) {
+      h = (h * 31 + text.charCodeAt(i)) | 0;
+    }
+    return Math.abs(h);
+  }
+
+  /** 도서관별 소장/대출 상태 (데모) */
+  function holdingsMock(book, libIds) {
+    var isbn = (book && book.isbn13) || "unknown";
+    return (libIds || []).map(function (id) {
+      var raw = book && book.holdings && book.holdings[id];
+      if (!raw) {
+        var seed = hashString(isbn + ":" + id);
+        raw = { has: seed % 4 === 0 ? "N" : "Y", loan: seed % 3 === 0 ? "N" : "Y" };
+      }
+      return { libId: id, hasBook: raw.has, loanAvailable: raw.loan };
+    });
+  }
+
+  function escapeHtml(text) {
+    return String(text == null ? "" : text)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;");
+  }
+
+  /** 검색어와 일치하는 부분만 <mark> 로 감싼다 */
+  function highlight(text, query) {
+    var safe = escapeHtml(text);
+    var nq = normalize(query);
+    if (!nq) return safe;
+    var plain = String(text == null ? "" : text);
+    var compact = normalize(plain);
+    var pos = compact.indexOf(nq);
+    if (pos < 0) return safe;
+    // 공백 제거로 위치가 달라지므로, 원문에서 단순 부분일치를 우선 시도
+    var lower = plain.toLowerCase();
+    var direct = lower.indexOf(String(query).toLowerCase());
+    if (direct >= 0) {
+      return (
+        escapeHtml(plain.slice(0, direct)) +
+        "<mark>" +
+        escapeHtml(plain.slice(direct, direct + String(query).length)) +
+        "</mark>" +
+        escapeHtml(plain.slice(direct + String(query).length))
+      );
+    }
+    return safe;
+  }
+
+  function formatYear(year) {
+    return year ? String(year) + "년" : "";
+  }
+
+  return {
+    haversine: haversine,
+    distanceKm: distanceKm,
+    rankLibraries: rankLibraries,
+    formatDistance: formatDistance,
+    statusOf: statusOf,
+    normalize: normalize,
+    searchMock: searchMock,
+    holdingsMock: holdingsMock,
+    escapeHtml: escapeHtml,
+    highlight: highlight,
+    formatYear: formatYear
+  };
+});
+
+</script>
+    <script>
+/* =========================================================
+   책모아 — 화면 로직
+   해시 라우팅: #/  →  #/r?q=  →  #/b?isbn=
+   ========================================================= */
+(function () {
+  "use strict";
+
+  var cfg = window.APP_CONFIG;
+  var core = window.LibCore;
+  var BOOKS = (window.MOCK && window.MOCK.books) || [];
+  var app = document.getElementById("app");
+
+  var RECENT_KEY = "chaekmoa.recent.v1";
+  var SNAPSHOT_KEY = "chaekmoa.snapshot.v1";
+  var SUGGESTIONS = ["사피엔스", "채식주의자", "역사의 역사"];
+
+  var ICON = {
+    back:
+      '<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>',
+    home:
+      '<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/></svg>',
+    search:
+      '<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.6-3.6"/></svg>'
+  };
+
+  var state = {
+    mode: cfg.apiBase ? "live" : "demo",
+    query: "",
+    material: "all",
+    selected: cfg.libraries
+      .filter(function (lib) {
+        return lib.enabled;
+      })
+      .map(function (lib) {
+        return lib.id;
+      }),
+    books: [],
+    book: null,
+    holdings: [],
+    error: null
+  };
+
+  var cache = { search: new Map(), holdings: new Map() };
+  var routeToken = 0;
+
+  /* ---------------------------------------------------------
+     유틸
+     --------------------------------------------------------- */
+  function esc(text) {
+    return core.escapeHtml(text);
+  }
+
+  function wait(ms) {
+    return new Promise(function (resolve) {
+      setTimeout(resolve, ms);
+    });
+  }
+
+  function apiBase() {
+    return String(cfg.apiBase || "").replace(/\/+$/, "");
+  }
+
+  function libById(id) {
+    return cfg.libraries.filter(function (lib) {
+      return lib.id === id;
+    })[0];
+  }
+
+  function libNames(ids) {
+    return ids
+      .map(function (id) {
+        var lib = libById(id);
+        return lib ? lib.short : id;
+      })
+      .join(" · ");
+  }
+
+  function formatLabel(book) {
+    var formats = (book && book.formats) || ["paper"];
+    return formats
+      .map(function (f) {
+        return f === "ebook" ? "전자책" : "종이책";
+      })
+      .join(" · ");
+  }
+
+  function hashCode(text) {
+    var h = 0;
+    var s = String(text || "");
+    for (var i = 0; i < s.length; i += 1) {
+      h = (h * 31 + s.charCodeAt(i)) | 0;
+    }
+    return Math.abs(h);
+  }
+
+  function safeCover(url) {
+    return String(url || "").replace(/^http:\/\//i, "https://");
+  }
+
+  function coverHtml(book, size) {
+    var hue = hashCode(book.isbn13 || book.title) % 360;
+    var cls = size ? " cover--" + size : "";
+    var img = book.cover
+      ? '<img src="' + esc(safeCover(book.cover)) + '" alt="" loading="lazy" onerror="this.remove()">'
+      : "";
+    return (
+      '<span class="cover' +
+      cls +
+      '" style="background:linear-gradient(150deg,hsl(' +
+      hue +
+      ' 36% 34%),hsl(' +
+      hue +
+      ' 44% 17%))">' +
+      '<span class="cover__fallback">' +
+      esc((book.title || "책").slice(0, 1)) +
+      "</span>" +
+      img +
+      "</span>"
+    );
+  }
+
+  function toast(message) {
+    var el = document.createElement("div");
+    el.className = "toast";
+    el.textContent = message;
+    document.body.appendChild(el);
+    setTimeout(function () {
+      el.remove();
+    }, 1800);
+  }
+
+  /* ---------------------------------------------------------
+     최근 검색어 (localStorage)
+     --------------------------------------------------------- */
+  function getRecent() {
+    try {
+      var raw = JSON.parse(localStorage.getItem(RECENT_KEY) || "[]");
+      return Array.isArray(raw) ? raw.slice(0, 8) : [];
+    } catch (e) {
+      return [];
+    }
+  }
+
+  function addRecent(query) {
+    if (!query) return;
+    var list = getRecent().filter(function (item) {
+      return item !== query;
+    });
+    list.unshift(query);
+    try {
+      localStorage.setItem(RECENT_KEY, JSON.stringify(list.slice(0, 8)));
+    } catch (e) {
+      /* 저장 불가 환경은 무시 */
+    }
+  }
+
+  function clearRecent() {
+    try {
+      localStorage.removeItem(RECENT_KEY);
+    } catch (e) {
+      /* ignore */
+    }
+  }
+
+  /* ---------------------------------------------------------
+     API
+     --------------------------------------------------------- */
+  function ApiError(kind, message) {
+    this.kind = kind;
+    this.message = message;
+  }
+  ApiError.prototype = Object.create(Error.prototype);
+  ApiError.prototype.constructor = ApiError;
+
+  function fetchJson(url) {
+    var controller = new AbortController();
+    var timer = setTimeout(function () {
+      controller.abort();
+    }, 12000);
+
+    return fetch(url, {
+      signal: controller.signal,
+      headers: { Accept: "application/json" }
+    })
+      .then(function (res) {
+        return res.text().then(function (text) {
+          var data = null;
+          try {
+            data = text ? JSON.parse(text) : null;
+          } catch (e) {
+            data = null;
+          }
+          if (!res.ok) {
+            var code = (data && data.error) || "http_" + res.status;
+            var message =
+              (data && data.message) ||
+              "검색 서버가 잠시 응답하지 않아요. 잠시 후 다시 시도해 주세요.";
+            throw new ApiError(code === "missing_key" ? "no_key" : "server", message);
+          }
+          return data || {};
+        });
+      })
+      .catch(function (err) {
+        if (err && err.name === "AbortError") {
+          throw new ApiError("timeout", "응답이 너무 늦어요. 잠시 후 다시 시도해 주세요.");
+        }
+        if (err instanceof ApiError) throw err;
+        throw new ApiError("network", "네트워크 연결을 확인해 주세요.");
+      })
+      .finally(function () {
+        clearTimeout(timer);
+      });
+  }
+
+  function toBook(raw) {
+    var isbn = String(raw.isbn13 || raw.isbn || "").replace(/[^0-9Xx]/g, "");
+    return {
+      isbn13: isbn,
+      title: raw.title || raw.bookname || "",
+      authors: raw.authors || "",
+      publisher: raw.publisher || "",
+      year: Number(raw.year || raw.publication_year) || null,
+      cover: raw.cover || raw.bookImageURL || "",
+      detailUrl: raw.detailUrl || raw.bookDtlUrl || "",
+      description: raw.description || "",
+      formats: raw.formats || ["paper"]
+    };
+  }
+
+  function apiSearch(query) {
+    if (state.mode === "demo") {
+      return wait(430).then(function () {
+        return core.searchMock(query, state.material, BOOKS);
+      });
+    }
+    var url =
+      apiBase() +
+      "/api/search?q=" +
+      encodeURIComponent(query) +
+      "&material=" +
+      encodeURIComponent(state.material);
+    return fetchJson(url).then(function (data) {
+      return (data.books || [])
+        .map(toBook)
+        .filter(function (book) {
+          return Boolean(book.title && book.isbn13);
+        });
+    });
+  }
+
+  function apiHoldings(book) {
+    if (state.mode === "demo") {
+      return wait(320).then(function () {
+        return core.holdingsMock(book, state.selected);
+      });
+    }
+    var url =
+      apiBase() +
+      "/api/holdings?isbn=" +
+      encodeURIComponent(book.isbn13) +
+      "&libs=" +
+      encodeURIComponent(state.selected.join(","));
+    return fetchJson(url).then(function (data) {
+      return data.holdings || [];
+    });
+  }
+
+  function getSearch(query) {
+    var key = query + "|" + state.material;
+    if (cache.search.has(key)) return cache.search.get(key);
+    var promise = apiSearch(query).catch(function (err) {
+      cache.search.delete(key);
+      throw err;
+    });
+    cache.search.set(key, promise);
+    return promise;
+  }
+
+  function getHoldings(book) {
+    var key = book.isbn13 + "|" + state.selected.slice().sort().join(",");
+    if (cache.holdings.has(key)) return cache.holdings.get(key);
+    var promise = apiHoldings(book)
+      .then(function (rows) {
+        return mergeHoldings(rows);
+      })
+      .catch(function (err) {
+        cache.holdings.delete(key);
+        throw err;
+      });
+    cache.holdings.set(key, promise);
+    return promise;
+  }
+
+  function mergeHoldings(rows) {
+    var selected = cfg.libraries.filter(function (lib) {
+      return state.selected.indexOf(lib.id) >= 0;
+    });
+    var ranked = core.rankLibraries(selected, cfg.origin);
+    return ranked.map(function (lib) {
+      var found = (rows || []).filter(function (row) {
+        return row.libId === lib.id;
+      })[0] || { hasBook: "N", loanAvailable: "N" };
+      return {
+        lib: lib,
+        hasBook: found.hasBook,
+        loanAvailable: found.loanAvailable
+      };
+    });
+  }
+
+  /* ---------------------------------------------------------
+     라우팅
+     --------------------------------------------------------- */
+  function parseRoute() {
+    var raw = location.hash.replace(/^#/, "");
+    if (!raw || raw === "/") {
+      return { name: "home", params: new URLSearchParams() };
+    }
+    var cut = raw.indexOf("?");
+    var path = (cut >= 0 ? raw.slice(0, cut) : raw).replace(/^\/+|\/+$/g, "");
+    var params = new URLSearchParams(cut >= 0 ? raw.slice(cut + 1) : "");
+    return { name: path || "home", params: params };
+  }
+
+  function go(hash) {
+    if (location.hash === hash) {
+      route();
+    } else {
+      location.hash = hash;
+    }
+  }
+
+  function goBack() {
+    var r = parseRoute();
+    if (r.name === "b" && state.query) {
+      replaceHash("#/r?q=" + encodeURIComponent(state.query));
+      return;
+    }
+    replaceHash("#/");
+  }
+
+  function replaceHash(hash) {
+    if (location.hash === hash) {
+      route();
+    } else {
+      location.replace(hash);
+    }
+  }
+
+  async function route() {
+    var token = ++routeToken;
+    var r = parseRoute();
+
+    if (r.name === "home") {
+      state.query = "";
+      state.error = null;
+      renderHome();
+      return;
+    }
+
+    if (r.name === "r") {
+      var query = (r.params.get("q") || "").trim();
+      if (!query) {
+        go("#/");
+        return;
+      }
+      var libsParam = r.params.get("libs");
+      if (libsParam) {
+        var valid = libsParam.split(",").filter(function (id) {
+          return libById(id);
+        });
+        if (valid.length) state.selected = valid;
+      }
+      state.query = query;
+      var isbn = r.params.get("isbn");
+
+      renderLoading();
+      try {
+        var books = await getSearch(query);
+        if (token !== routeToken) return;
+        if (!books.length) {
+          renderEmpty(query);
+          return;
+        }
+        var picked =
+          books.filter(function (book) {
+            return book.isbn13 === isbn;
+          })[0] || books[0];
+        state.books = books;
+        state.book = picked;
+        state.holdings = await getHoldings(picked);
+        if (token !== routeToken) return;
+        saveSnapshot();
+        renderResults();
+      } catch (err) {
+        if (token !== routeToken) return;
+        state.error = err;
+        renderError(err);
+      }
+      return;
+    }
+
+    if (r.name === "b") {
+      showDetail(r.params);
+      return;
+    }
+
+    go("#/");
+  }
+
+  window.addEventListener("hashchange", route);
+
+  /* ---------------------------------------------------------
+     스냅샷 (새로고침 대비)
+     --------------------------------------------------------- */
+  function saveSnapshot() {
+    try {
+      sessionStorage.setItem(
+        SNAPSHOT_KEY,
+        JSON.stringify({
+          query: state.query,
+          books: state.books,
+          isbn: state.book.isbn13,
+          holdings: state.holdings,
+          selected: state.selected,
+          at: Date.now()
+        })
+      );
+    } catch (e) {
+      /* ignore */
+    }
+  }
+
+  function loadSnapshot() {
+    try {
+      return JSON.parse(sessionStorage.getItem(SNAPSHOT_KEY) || "null");
+    } catch (e) {
+      return null;
+    }
+  }
+
+  /* ---------------------------------------------------------
+     홈
+     --------------------------------------------------------- */
+  function renderHome() {
+    document.title = "책모아 — 도서관 통합 검색";
+    state.error = null;
+    var recent = getRecent();
+    var ranked = core.rankLibraries(cfg.libraries, cfg.origin);
+    var materials = [
+      ["all", "전체"],
+      ["paper", "종이책"],
+      ["ebook", "전자책"]
+    ];
+
+    app.innerHTML =
+      '<header class="hero"><div class="hero__inner">' +
+      '<div class="hero__eyebrow">도서관 통합 검색</div>' +
+      "<h1>책모아<span class=\"dot\">.</span></h1>" +
+      '<p class="hero__sub">여러 도서관에 흩어진 책을, 한 번에.</p>' +
+      "</div></header>" +
+      '<main class="page">' +
+      '<section class="search-card">' +
+      '<form id="search-form" autocomplete="off" novalidate>' +
+      '<div class="field"><span class="field__icon">' +
+      ICON.search +
+      "</span>" +
+      '<label class="sr-only" for="q">도서명, 저자, ISBN 검색</label>' +
+      '<input id="q" name="q" type="search" enterkeyhint="search" ' +
+      'placeholder="도서명, 저자, ISBN" value="' +
+      esc(state.query) +
+      '">' +
+      "</div>" +
+      '<div class="opt"><span class="opt__label">자료 유형</span><div class="chips">' +
+      materials
+        .map(function (pair) {
+          var on = state.material === pair[0] ? " is-on" : "";
+          return (
+            '<button type="button" class="chip' +
+            on +
+            '" data-action="material" data-value="' +
+            pair[0] +
+            '">' +
+            pair[1] +
+            "</button>"
+          );
+        })
+        .join("") +
+      "</div></div>" +
+      '<div class="opt"><span class="opt__label">도서관 <em>' +
+      state.selected.length +
+      "곳 선택</em></span><div class=\"chips\">" +
+      cfg.libraries
+        .map(function (lib) {
+          var on = state.selected.indexOf(lib.id) >= 0 ? " is-on" : "";
+          var off = lib.enabled ? "" : " disabled";
+          var soon = lib.enabled ? "" : '<span class="chip__soon">준비 중</span>';
+          return (
+            '<button type="button" class="chip chip--' +
+            lib.kind +
+            on +
+            '" data-action="toggle-lib" data-id="' +
+            lib.id +
+            '"' +
+            off +
+            ">" +
+            '<span class="chip__dot"></span>' +
+            esc(lib.short) +
+            soon +
+            "</button>"
+          );
+        })
+        .join("") +
+      "</div></div>" +
+      '<button class="btn btn--primary" type="submit">통합 검색</button>' +
+      "</form>" +
+      "</section>" +
+      recentBlock(recent) +
+      '<section class="section">' +
+      '<h2 class="section__title"><b>' +
+      cfg.libraries.length +
+      "곳</b>의 도서관</h2>" +
+      '<ul class="liblist">' +
+      ranked.map(libRow).join("") +
+      "</ul>" +
+      "</section>" +
+      "</main>" +
+      '<footer class="foot"><b>책모아</b> · 공공도서관 소장 정보는 도서관 정보나루 Open API를 사용합니다.<br>' +
+      "대출 가능 여부는 전일 기준이므로 방문 전 도서관에 확인하세요.</footer>";
+  }
+
+  function recentBlock(recent) {
+    if (!recent.length) return "";
+    return (
+      '<section class="recent">' +
+      '<div class="recent__head"><h2>최근 검색어</h2>' +
+      '<button class="recent__clear" data-action="clear-recent">전체 삭제</button></div>' +
+      '<div class="recent__list">' +
+      recent
+        .map(function (query) {
+          return (
+            '<button class="recent__item" data-action="recent" data-query="' +
+            esc(query) +
+            '">' +
+            esc(query) +
+            "</button>"
+          );
+        })
+        .join("") +
+      "</div></section>"
+    );
+  }
+
+  function libRow(lib) {
+    var off = !lib.enabled;
+    return (
+      '<li class="librow' +
+      (off ? " is-off" : "") +
+      '">' +
+      '<span class="badge badge--' +
+      lib.kind +
+      '">' +
+      lib.kindLabel +
+      "</span>" +
+      '<div class="librow__body">' +
+      '<p class="librow__name">' +
+      esc(lib.name) +
+      "</p>" +
+      '<p class="librow__meta">' +
+      (off ? "연동 준비 중" : "정보나루 · 소장 조회") +
+      "</p>" +
+      "</div>" +
+      '<div class="librow__right">' +
+      core.formatDistance(lib.km) +
+      "</div>" +
+      "</li>"
+    );
+  }
+
+  /* ---------------------------------------------------------
+     로딩
+     --------------------------------------------------------- */
+  function renderLoading() {
+    document.title = "검색 중 — 책모아";
+    var names = libNames(state.selected);
+    var skeleton = "";
+    for (var i = 0; i < 3; i += 1) {
+      skeleton +=
+        '<div class="skeleton">' +
+        '<div class="sk-line sk-line--short"></div>' +
+        '<div class="sk-line"></div>' +
+        '<div class="sk-line"></div>' +
+        "</div>";
+    }
+
+    app.innerHTML =
+      topBar("검색 중") +
+      '<main class="page">' +
+      '<div class="loading" role="status" aria-live="polite">' +
+      '<span class="dots"><i></i><i></i><i></i></span>' +
+      "<h2>도서관을 뒤지는 중…</h2>" +
+      "<p>" +
+      esc(names) +
+      "의 소장 정보를 확인하고 있어요.</p>" +
+      "</div>" +
+      skeleton +
+      "</main>";
+  }
+
+  /* ---------------------------------------------------------
+     결과
+     --------------------------------------------------------- */
+  function topBar(title) {
+    return (
+      '<header class="topbar">' +
+      '<button class="iconbtn" data-action="back" aria-label="뒤로 가기">' +
+      ICON.back +
+      "</button>" +
+      '<div class="topbar__title">' +
+      esc(title) +
+      "</div>" +
+      '<div class="topbar__spacer"></div>' +
+      '<button class="iconbtn" data-action="home" aria-label="처음으로">' +
+      ICON.home +
+      "</button>" +
+      "</header>"
+    );
+  }
+
+  function renderResults() {
+    var book = state.book;
+    var rows = state.holdings;
+    var owned = rows.filter(function (row) {
+      return row.hasBook === "Y";
+    }).length;
+    var available = rows.filter(function (row) {
+      return row.hasBook === "Y" && row.loanAvailable === "Y";
+    }).length;
+
+    document.title = book.title + " — 책모아";
+    window.scrollTo(0, 0);
+
+    app.innerHTML =
+      topBar("검색 결과") +
+      '<main class="page">' +
+      bookHead(book, rows.length, owned, available) +
+      strip(book) +
+      '<div class="result-head"><span>가까운 도서관 순</span><span>' +
+      rows.length +
+      "곳 확인</span></div>" +
+      '<div class="libcards">' +
+      rows.map(libCard).join("") +
+      "</div>" +
+      '<p class="disclaimer">거리는 ' +
+      esc(cfg.origin.label) +
+      " 기준 직선거리입니다. 대출 가능 여부는 전일 기준이며 도서관 사정에 따라 달라질 수 있어요.</p>" +
+      "</main>";
+  }
+
+  function bookHead(book, total, owned, available) {
+    return (
+      '<section class="bookhead">' +
+      coverHtml(book) +
+      '<div class="bookhead__body">' +
+      '<h1 class="bookhead__title">' +
+      esc(book.title) +
+      "</h1>" +
+      '<p class="bookhead__meta">' +
+      esc(book.authors || "저자 미상") +
+      (book.publisher ? " · " + esc(book.publisher) : "") +
+      (book.year ? " · " + book.year : "") +
+      "</p>" +
+      '<div class="bookhead__stats">' +
+      '<span class="stat-pill stat-pill--accent">' +
+      owned +
+      "곳 소장</span>" +
+      '<span class="stat-pill">' +
+      available +
+      "곳 대출 가능</span>" +
+      '<span class="stat-pill">' +
+      esc(formatLabel(book)) +
+      "</span>" +
+      "</div></div></section>"
+    );
+  }
+
+  function strip(current) {
+    if (!state.books || state.books.length < 2) return "";
+    return (
+      '<div class="strip" aria-label="검색된 다른 책">' +
+      state.books
+        .slice(0, 8)
+        .map(function (book) {
+          var on = book.isbn13 === current.isbn13 ? " is-active" : "";
+          return (
+            '<button class="strip__item' +
+            on +
+            '" data-action="select-book" data-isbn="' +
+            esc(book.isbn13) +
+            '">' +
+            coverHtml(book, "sm") +
+            '<span class="strip__title">' +
+            esc(book.title) +
+            "</span></button>"
+          );
+        })
+        .join("") +
+      "</div>"
+    );
+  }
+
+  function libCard(row) {
+    var lib = row.lib;
+    var st = core.statusOf(row.hasBook, row.loanAvailable);
+    var home = lib.homepage
+      ? '<a class="link link--muted" href="' +
+        esc(lib.homepage) +
+        '" target="_blank" rel="noopener noreferrer">도서관 홈페이지 ↗</a>'
+      : "";
+
+    return (
+      '<article class="libcard' +
+      (st.code === "missing" ? " is-missing" : "") +
+      '">' +
+      '<div class="libcard__head">' +
+      '<span class="badge badge--' +
+      lib.kind +
+      '">' +
+      lib.kindLabel +
+      "</span>" +
+      '<span class="libcard__dist">' +
+      core.formatDistance(lib.km) +
+      "<span>직선</span></span></div>" +
+      '<h3 class="libcard__name">' +
+      esc(lib.name) +
+      "</h3>" +
+      '<div class="libcard__meta"><span class="fmt">' +
+      esc(formatLabel(state.book)) +
+      '</span><span class="status status--' +
+      st.code +
+      '">' +
+      st.label +
+      "</span></div>" +
+      '<p class="libcard__hint">' +
+      st.hint +
+      "</p>" +
+      '<div class="libcard__foot">' +
+      '<button class="link" data-action="detail" data-isbn="' +
+      esc(state.book.isbn13) +
+      '">상세 보기</button>' +
+      home +
+      "</div></article>"
+    );
+  }
+
+  /* ---------------------------------------------------------
+     빈 상태 / 오류
+     --------------------------------------------------------- */
+  function renderEmpty(query) {
+    document.title = "검색 결과 없음 — 책모아";
+    app.innerHTML =
+      topBar("검색 결과") +
+      '<main class="page"><div class="state">' +
+      '<div class="state__emoji">📭</div>' +
+      "<h2>‘" +
+      esc(query) +
+      "’ 결과가 없어요</h2>" +
+      "<p>도서명을 짧게 줄이거나 저자명으로 다시 검색해 보세요.<br>선택한 도서관을 늘리는 것도 방법이에요.</p>" +
+      '<div class="suggest"><span class="suggest__label">이런 검색어는 어때요?</span>' +
+      '<div class="chips" style="justify-content:center;margin-top:9px">' +
+      SUGGESTIONS.map(function (word) {
+        return (
+          '<button class="chip" data-action="suggest" data-query="' +
+          esc(word) +
+          '">' +
+          esc(word) +
+          "</button>"
+        );
+      }).join("") +
+      "</div></div>" +
+      '<div class="state__actions">' +
+      '<button class="btn btn--primary" data-action="home">되돌아가기</button>' +
+      "</div></div></main>";
+  }
+
+  function renderError(err) {
+    var noKey = err.kind === "no_key";
+    document.title = "오류 — 책모아";
+
+    app.innerHTML =
+      topBar("문제가 생겼어요") +
+      '<main class="page"><div class="state">' +
+      '<div class="state__emoji">' +
+      (noKey ? "🔑" : "🔌") +
+      "</div>" +
+      "<h2>" +
+      (noKey ? "API 키가 아직 없어요" : "검색에 실패했어요") +
+      "</h2>" +
+      "<p>" +
+      (noKey
+        ? "Cloudflare Worker에 정보나루 인증키를 등록하면 실제 소장 데이터로 검색됩니다."
+        : esc(err.message || "잠시 후 다시 시도해 주세요.")) +
+      "</p>" +
+      '<div class="state__actions">' +
+      '<button class="btn btn--primary" data-action="retry">다시 시도</button>' +
+      (state.mode === "live"
+        ? '<button class="btn btn--ghost" data-action="demo">데모 데이터로 보기</button>'
+        : "") +
+      "</div></div></main>";
+  }
+
+  /* ---------------------------------------------------------
+     상세
+     --------------------------------------------------------- */
+  function showDetail(params) {
+    var isbn = params.get("isbn");
+    var snap = loadSnapshot();
+
+    /* 새로고침·딥링크로 바로 들어온 경우 */
+    if (!snap || !snap.books) {
+      if (state.mode === "demo") {
+        var demoBook = BOOKS.filter(function (book) {
+          return book.isbn13 === isbn;
+        })[0];
+        if (demoBook) {
+          state.selected = cfg.libraries
+            .filter(function (lib) {
+              return lib.enabled;
+            })
+            .map(function (lib) {
+              return lib.id;
+            });
+          state.query = "";
+          state.books = [demoBook];
+          state.book = demoBook;
+          state.holdings = mergeHoldings(
+            core.holdingsMock(demoBook, state.selected)
+          );
+          renderDetail();
+          return;
+        }
+      }
+      go("#/");
+      return;
+    }
+
+    var book = snap.books.filter(function (b) {
+      return b.isbn13 === isbn;
+    })[0];
+    if (!book) {
+      go("#/");
+      return;
+    }
+    state.query = snap.query || "";
+    state.books = snap.books;
+    state.book = book;
+    state.holdings =
+      snap.isbn === isbn && snap.holdings ? snap.holdings : [];
+    renderDetail();
+  }
+
+  function renderDetail() {
+    var book = state.book;
+    var rows = state.holdings;
+    document.title = book.title + " — 책모아";
+    window.scrollTo(0, 0);
+
+    app.innerHTML =
+      topBar("도서 상세") +
+      '<main class="page">' +
+      '<section class="detail-hero">' +
+      coverHtml(book, "lg") +
+      '<div class="detail-hero__body">' +
+      "<h1>" +
+      esc(book.title) +
+      "</h1>" +
+      '<p class="detail-hero__meta">' +
+      esc(book.authors || "저자 미상") +
+      (book.publisher ? " · " + esc(book.publisher) : "") +
+      (book.year ? " · " + book.year : "") +
+      "</p>" +
+      '<p class="detail-hero__isbn">ISBN ' +
+      esc(book.isbn13) +
+      "</p>" +
+      "</div></section>" +
+      (book.description
+        ? '<p class="desc">' + esc(book.description) + "</p>"
+        : "") +
+      '<section class="holdings"><h2>소장 도서관 ' +
+      rows.length +
+      "곳</h2>" +
+      (rows.length
+        ? rows.map(holdingRow).join("")
+        : '<p class="disclaimer">소장 정보를 불러오지 못했어요. 다시 검색해 주세요.</p>') +
+      "</section>" +
+      '<div class="detail__actions">' +
+      '<button class="btn btn--ghost" data-action="copy-isbn" data-isbn="' +
+      esc(book.isbn13) +
+      '">ISBN 복사</button>' +
+      '<button class="btn btn--ghost" data-action="back">목록으로</button>' +
+      "</div></main>";
+  }
+
+  function holdingRow(row) {
+    var lib = row.lib;
+    var st = core.statusOf(row.hasBook, row.loanAvailable);
+    var link = lib.homepage
+      ? '<a class="link" href="' +
+        esc(lib.homepage) +
+        '" target="_blank" rel="noopener noreferrer">홈페이지</a>'
+      : "";
+    return (
+      '<div class="holding">' +
+      '<span class="badge badge--' +
+      lib.kind +
+      '">' +
+      lib.kindLabel +
+      "</span>" +
+      '<div class="holding__body">' +
+      '<p class="holding__name">' +
+      esc(lib.name) +
+      "</p>" +
+      '<p class="holding__meta">' +
+      esc(formatLabel(state.book)) +
+      (link ? " · " + link : "") +
+      "</p></div>" +
+      '<div class="holding__right"><span class="status status--' +
+      st.code +
+      '">' +
+      st.label +
+      '</span><div class="holding__dist">' +
+      core.formatDistance(lib.km) +
+      "</div></div></div>"
+    );
+  }
+
+  /* ---------------------------------------------------------
+     검색 실행
+     --------------------------------------------------------- */
+  function startSearch(query) {
+    query = String(query || "").trim();
+    if (!query) {
+      var input = document.getElementById("q");
+      if (input) input.focus();
+      return;
+    }
+    if (!state.selected.length) {
+      toast("도서관을 한 곳 이상 선택해 주세요");
+      return;
+    }
+    state.query = query;
+    addRecent(query);
+    var target =
+      "#/r?q=" +
+      encodeURIComponent(query) +
+      (state.selected.length ? "&libs=" + encodeURIComponent(state.selected.join(",")) : "");
+    go(target);
+  }
+
+  function selectBook(isbn) {
+    var target =
+      "#/r?q=" +
+      encodeURIComponent(state.query) +
+      "&isbn=" +
+      encodeURIComponent(isbn) +
+      "&libs=" +
+      encodeURIComponent(state.selected.join(","));
+    go(target);
+  }
+
+  /* ---------------------------------------------------------
+     이벤트
+     --------------------------------------------------------- */
+  document.addEventListener("input", function (event) {
+    if (event.target && event.target.id === "q") {
+      state.query = event.target.value;
+    }
+  });
+
+  document.addEventListener("submit", function (event) {
+    if (event.target && event.target.id === "search-form") {
+      event.preventDefault();
+      var input = document.getElementById("q");
+      startSearch(input ? input.value : state.query);
+    }
+  });
+
+  document.addEventListener("click", function (event) {
+    var el = event.target.closest("[data-action]");
+    if (!el) return;
+    var action = el.getAttribute("data-action");
+
+    if (action === "material") {
+      state.material = el.getAttribute("data-value");
+      renderHome();
+      return;
+    }
+
+    if (action === "toggle-lib") {
+      var id = el.getAttribute("data-id");
+      var index = state.selected.indexOf(id);
+      if (index >= 0) {
+        if (state.selected.length === 1) {
+          toast("도서관을 한 곳 이상 선택해 주세요");
+          return;
+        }
+        state.selected.splice(index, 1);
+      } else {
+        state.selected.push(id);
+      }
+      renderHome();
+      return;
+    }
+
+    if (action === "recent" || action === "suggest") {
+      startSearch(el.getAttribute("data-query"));
+      return;
+    }
+
+    if (action === "clear-recent") {
+      clearRecent();
+      renderHome();
+      return;
+    }
+
+    if (action === "back") {
+      goBack();
+      return;
+    }
+
+    if (action === "home") {
+      go("#/");
+      return;
+    }
+
+    if (action === "select-book") {
+      selectBook(el.getAttribute("data-isbn"));
+      return;
+    }
+
+    if (action === "detail") {
+      go("#/b?isbn=" + encodeURIComponent(el.getAttribute("data-isbn")));
+      return;
+    }
+
+    if (action === "retry") {
+      cache.search.clear();
+      cache.holdings.clear();
+      route();
+      return;
+    }
+
+    if (action === "demo") {
+      state.mode = "demo";
+      cache.search.clear();
+      cache.holdings.clear();
+      route();
+      return;
+    }
+
+    if (action === "copy-isbn") {
+      var isbn = el.getAttribute("data-isbn");
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(isbn).then(
+          function () {
+            toast("ISBN을 복사했어요");
+          },
+          function () {
+            toast("복사하지 못했어요");
+          }
+        );
+      } else {
+        toast("이 브라우저에서는 복사할 수 없어요");
+      }
+    }
+  });
+
+  /* 시작 */
+  try {
+    if (!location.hash) {
+      history.replaceState(null, "", "#/");
+    }
+  } catch (e) {
+    location.hash = "#/";
+  }
+  route();
+})();
+
+</script>
+  </body>
+</html>
