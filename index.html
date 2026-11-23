@@ -309,6 +309,50 @@ a {
   opacity: 0.9;
 }
 
+/* 도서관 그룹 (광양시 / 교육청) */
+.libgroups {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.libgroup__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 7px;
+}
+
+.libgroup__head span {
+  font-size: 11.5px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  color: #6f6858;
+}
+
+.libgroup__all {
+  border: 0;
+  background: none;
+  padding: 0;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--muted);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+
+.libgroup__all:hover {
+  color: var(--ink);
+}
+
+.soon-note {
+  margin: 13px 2px 0;
+  font-size: 11px;
+  line-height: 1.5;
+  color: #a29a88;
+}
+
 .chip__dot {
   width: 7px;
   height: 7px;
@@ -783,6 +827,15 @@ a {
   line-height: 1.3;
 }
 
+.libcard__addr {
+  margin: 5px 0 0;
+  font-size: 11.5px;
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .libcard__meta {
   display: flex;
   align-items: center;
@@ -1244,6 +1297,9 @@ a {
    ---------------------------------------------------------
    배포 후 apiBase 값만 채우면 데모 모드 → 실제 API 모드로
    전환됩니다. (예: "https://chaekmoa-api.xxxx.workers.dev")
+
+   도서관 좌표는 OpenStreetMap 기준 대략값입니다.
+   거리 정렬에만 쓰이므로 필요하면 자유롭게 수정하세요.
    ========================================================= */
 window.APP_CONFIG = {
   appName: "책모아",
@@ -1252,31 +1308,135 @@ window.APP_CONFIG = {
   /* 거리 계산 기준점. "가까운 순" 정렬에 사용됩니다. */
   origin: { label: "광양시청", lat: 34.9406, lng: 127.6956 },
 
+  /* 화면에서 묶어 보여 줄 도서관 그룹 */
+  groups: [
+    { id: "city", label: "광양시 도서관" },
+    { id: "edu", label: "광양교육청 도서관" },
+    { id: "univ", label: "대학 도서관" },
+    { id: "corp", label: "기업 도서관" }
+  ],
+
   /* 검색 대상 도서관.
      enabled: false 인 곳은 화면에 "준비 중"으로 표시됩니다.
-     lat/lng 는 정렬용 대략 좌표이니 필요하면 수정하세요. */
+     formats: 해당 도서관이 다루는 자료 유형 (paper=종이책, ebook=전자책) */
   libraries: [
     {
-      id: "gyangyang",
-      name: "광양도서관",
-      short: "광양도서관",
+      id: "gwangyeong",
+      name: "광양광영도서관",
+      short: "광영",
+      group: "city",
       kind: "public",
       kindLabel: "공공",
-      lat: 34.9412,
-      lng: 127.6958,
-      libCode: "",
+      address: "전라남도 광양시 광영로 74, 4~7층",
+      lat: 34.9625,
+      lng: 127.7164,
+      formats: ["paper"],
+      note: "정보나루 · 종이책",
       homepage: "",
       enabled: true
     },
     {
-      id: "jne_gyangyang",
-      name: "전남교육청광양도서관",
-      short: "교육청광양",
+      id: "geumho",
+      name: "광양금호도서관",
+      short: "금호",
+      group: "city",
       kind: "public",
       kindLabel: "공공",
-      lat: 34.9762,
-      lng: 127.5894,
-      libCode: "",
+      address: "전라남도 광양시 초원길 42",
+      lat: 34.9259,
+      lng: 127.7393,
+      formats: ["paper"],
+      note: "정보나루 · 종이책",
+      homepage: "",
+      enabled: true
+    },
+    {
+      id: "okgok",
+      name: "광양옥곡도서관",
+      short: "옥곡",
+      group: "city",
+      kind: "public",
+      kindLabel: "공공",
+      address: "전라남도 광양시 광양읍 기두5길 5",
+      lat: 34.994,
+      lng: 127.6791,
+      formats: ["paper"],
+      note: "정보나루 · 종이책",
+      homepage: "",
+      enabled: true
+    },
+    {
+      id: "jungma",
+      name: "광양중마도서관",
+      short: "중마",
+      group: "city",
+      kind: "public",
+      kindLabel: "공공",
+      address: "전라남도 광양시 광장로 14",
+      lat: 34.93757,
+      lng: 127.69042,
+      formats: ["paper"],
+      note: "정보나루 · 종이책",
+      homepage: "",
+      enabled: true
+    },
+    {
+      id: "jungang",
+      name: "광양중앙도서관",
+      short: "중앙",
+      group: "city",
+      kind: "public",
+      kindLabel: "공공",
+      address: "전라남도 광양시 광양읍 항교길 9-30",
+      lat: 34.9732,
+      lng: 127.581,
+      formats: ["paper"],
+      note: "정보나루 · 종이책",
+      homepage: "",
+      enabled: true
+    },
+    {
+      id: "huimang",
+      name: "광양희망도서관",
+      short: "희망",
+      group: "city",
+      kind: "public",
+      kindLabel: "공공",
+      address: "전라남도 광양시 광양읍 인덕로 1022",
+      lat: 34.97348,
+      lng: 127.58261,
+      formats: ["paper"],
+      note: "정보나루 · 종이책",
+      homepage: "",
+      enabled: true
+    },
+    {
+      id: "edu_gwangyang",
+      name: "전남광주통합특별시교육청광양도서관",
+      short: "교육청광양",
+      group: "edu",
+      kind: "public",
+      kindLabel: "공공",
+      address: "전라남도 광양시 중마로 262",
+      lat: 34.9415,
+      lng: 127.6985,
+      formats: ["paper"],
+      note: "정보나루 · 종이책",
+      homepage: "https://grlib.jne.go.kr",
+      enabled: true
+    },
+    {
+      id: "edu_lifelong",
+      name: "전남광주통합특별시교육청광양평생교육관",
+      short: "평생교육관",
+      group: "edu",
+      kind: "public",
+      kindLabel: "공공",
+      address: "전남광주통합특별시 광양시 안산길 23",
+      lat: 34.9635,
+      lng: 127.7163,
+      formats: ["paper"],
+      note: "정보나루 · 종이책",
       homepage: "https://grlib.jne.go.kr",
       enabled: true
     },
@@ -1284,11 +1444,14 @@ window.APP_CONFIG = {
       id: "jnu_gwangju",
       name: "전남대학교 중앙도서관",
       short: "전남대(광주)",
+      group: "univ",
       kind: "university",
       kindLabel: "대학",
+      address: "광주광역시 북구 용봉로 77",
       lat: 35.1767,
       lng: 126.9052,
-      libCode: "",
+      formats: ["paper"],
+      note: "웹 파서 예정",
       homepage: "https://library.jnu.ac.kr",
       enabled: false
     },
@@ -1296,11 +1459,14 @@ window.APP_CONFIG = {
       id: "jnu_yeosu",
       name: "전남대학교 여수캠퍼스 도서관",
       short: "전남대(여수)",
+      group: "univ",
       kind: "university",
       kindLabel: "대학",
+      address: "전라남도 여수시 대학로 50",
       lat: 34.7699,
       lng: 127.7004,
-      libCode: "",
+      formats: ["paper"],
+      note: "웹 파서 예정",
       homepage: "https://yosulib.jnu.ac.kr",
       enabled: false
     },
@@ -1308,11 +1474,14 @@ window.APP_CONFIG = {
       id: "posco",
       name: "포스코 도서관",
       short: "포스코",
+      group: "corp",
       kind: "corporate",
       kindLabel: "기업",
+      address: "경상북도 포항시 남구 동해안로 6261",
       lat: 36.0194,
       lng: 129.3435,
-      libCode: "",
+      formats: ["ebook"],
+      note: "e-Book 전용",
       homepage: "",
       enabled: false
     }
@@ -1341,11 +1510,15 @@ window.MOCK = {
       description:
         "인류의 탄생부터 현재까지, 호모 사피엔스가 세계를 지배하게 된 과정을 추적한 역사서.",
       holdings: {
-        gyangyang: { has: "Y", loan: "Y" },
-        jne_gyangyang: { has: "Y", loan: "N" },
-        jnu_gwangju: { has: "Y", loan: "N" },
-        jnu_yeosu: { has: "Y", loan: "Y" },
-        posco: { has: "N", loan: "N" }
+        gwangyeong: { has: "Y", loan: "Y" },
+        geumho: { has: "Y", loan: "N" },
+        okgok: { has: "N", loan: "N" },
+        jungma: { has: "Y", loan: "Y" },
+        jungang: { has: "Y", loan: "N" },
+        huimang: { has: "Y", loan: "Y" },
+        edu_gwangyang: { has: "Y", loan: "N" },
+        edu_lifelong: { has: "N", loan: "N" },
+        posco: { has: "Y", loan: "Y" }
       }
     },
     {
@@ -1359,10 +1532,14 @@ window.MOCK = {
       description:
         "어느 날 육식을 거부하기 시작한 영혜와 그 가족을 통해 욕망과 폭력의 경계를 그린 소설.",
       holdings: {
-        gyangyang: { has: "Y", loan: "N" },
-        jne_gyangyang: { has: "Y", loan: "Y" },
-        jnu_gwangju: { has: "Y", loan: "Y" },
-        jnu_yeosu: { has: "N", loan: "N" },
+        gwangyeong: { has: "Y", loan: "N" },
+        geumho: { has: "Y", loan: "Y" },
+        okgok: { has: "N", loan: "N" },
+        jungma: { has: "Y", loan: "N" },
+        jungang: { has: "Y", loan: "Y" },
+        huimang: { has: "N", loan: "N" },
+        edu_gwangyang: { has: "Y", loan: "Y" },
+        edu_lifelong: { has: "N", loan: "N" },
         posco: { has: "Y", loan: "Y" }
       }
     },
@@ -1377,10 +1554,14 @@ window.MOCK = {
       description:
         "역사란 무엇인지, 역사가는 어떻게 과거를 해석해 왔는지를 흥미롭게 풀어낸 교양서.",
       holdings: {
-        gyangyang: { has: "Y", loan: "Y" },
-        jne_gyangyang: { has: "N", loan: "N" },
-        jnu_gwangju: { has: "Y", loan: "N" },
-        jnu_yeosu: { has: "N", loan: "N" },
+        gwangyeong: { has: "N", loan: "N" },
+        geumho: { has: "Y", loan: "Y" },
+        okgok: { has: "Y", loan: "N" },
+        jungma: { has: "Y", loan: "Y" },
+        jungang: { has: "N", loan: "N" },
+        huimang: { has: "Y", loan: "Y" },
+        edu_gwangyang: { has: "N", loan: "N" },
+        edu_lifelong: { has: "Y", loan: "N" },
         posco: { has: "N", loan: "N" }
       }
     },
@@ -1395,10 +1576,14 @@ window.MOCK = {
       description:
         "감정을 느끼지 못하는 소년 윤재가 세상과 부딪히며 성장하는 과정을 담은 장편소설.",
       holdings: {
-        gyangyang: { has: "N", loan: "N" },
-        jne_gyangyang: { has: "Y", loan: "Y" },
-        jnu_gwangju: { has: "N", loan: "N" },
-        jnu_yeosu: { has: "Y", loan: "N" },
+        gwangyeong: { has: "Y", loan: "Y" },
+        geumho: { has: "N", loan: "N" },
+        okgok: { has: "Y", loan: "Y" },
+        jungma: { has: "Y", loan: "N" },
+        jungang: { has: "Y", loan: "Y" },
+        huimang: { has: "N", loan: "N" },
+        edu_gwangyang: { has: "Y", loan: "Y" },
+        edu_lifelong: { has: "Y", loan: "Y" },
         posco: { has: "Y", loan: "Y" }
       }
     },
@@ -1413,10 +1598,14 @@ window.MOCK = {
       description:
         "골목 편의점에 어느 날 나타난 노숙인 독고와 그를 둘러싼 사람들의 이야기.",
       holdings: {
-        gyangyang: { has: "Y", loan: "Y" },
-        jne_gyangyang: { has: "Y", loan: "Y" },
-        jnu_gwangju: { has: "Y", loan: "Y" },
-        jnu_yeosu: { has: "Y", loan: "Y" },
+        gwangyeong: { has: "Y", loan: "Y" },
+        geumho: { has: "Y", loan: "Y" },
+        okgok: { has: "N", loan: "N" },
+        jungma: { has: "Y", loan: "Y" },
+        jungang: { has: "Y", loan: "Y" },
+        huimang: { has: "N", loan: "N" },
+        edu_gwangyang: { has: "Y", loan: "Y" },
+        edu_lifelong: { has: "Y", loan: "N" },
         posco: { has: "Y", loan: "N" }
       }
     },
@@ -1431,10 +1620,14 @@ window.MOCK = {
       description:
         "사막에 불시착한 비행사와 작은 별에서 온 어린 왕자가 나누는 이야기.",
       holdings: {
-        gyangyang: { has: "N", loan: "N" },
-        jne_gyangyang: { has: "N", loan: "N" },
-        jnu_gwangju: { has: "Y", loan: "N" },
-        jnu_yeosu: { has: "Y", loan: "Y" },
+        gwangyeong: { has: "N", loan: "N" },
+        geumho: { has: "Y", loan: "N" },
+        okgok: { has: "N", loan: "N" },
+        jungma: { has: "Y", loan: "N" },
+        jungang: { has: "Y", loan: "Y" },
+        huimang: { has: "N", loan: "N" },
+        edu_gwangyang: { has: "N", loan: "N" },
+        edu_lifelong: { has: "Y", loan: "Y" },
         posco: { has: "N", loan: "N" }
       }
     }
@@ -1688,13 +1881,7 @@ window.MOCK = {
     mode: cfg.apiBase ? "live" : "demo",
     query: "",
     material: "all",
-    selected: cfg.libraries
-      .filter(function (lib) {
-        return lib.enabled;
-      })
-      .map(function (lib) {
-        return lib.id;
-      }),
+    selected: defaultSelection(),
     books: [],
     book: null,
     holdings: [],
@@ -1732,6 +1919,42 @@ window.MOCK = {
       .map(function (id) {
         var lib = libById(id);
         return lib ? lib.short : id;
+      })
+      .join(" · ");
+  }
+
+  function defaultSelection() {
+    return cfg.libraries
+      .filter(function (lib) {
+        return lib.enabled;
+      })
+      .map(function (lib) {
+        return lib.id;
+      });
+  }
+
+  function allEnabledSelected() {
+    var ids = defaultSelection();
+    return (
+      ids.length === state.selected.length &&
+      ids.every(function (id) {
+        return state.selected.indexOf(id) >= 0;
+      })
+    );
+  }
+
+  function libsParam() {
+    return allEnabledSelected()
+      ? ""
+      : "&libs=" + encodeURIComponent(state.selected.join(","));
+  }
+
+  /** 도서관이 다루는 자료 유형 (도서관별로 다를 수 있음) */
+  function formatLabelFor(lib) {
+    var formats = (lib && lib.formats) || ["paper"];
+    return formats
+      .map(function (f) {
+        return f === "ebook" ? "전자책" : "종이책";
       })
       .join(" · ");
   }
@@ -1994,7 +2217,7 @@ window.MOCK = {
   function goBack() {
     var r = parseRoute();
     if (r.name === "b" && state.query) {
-      replaceHash("#/r?q=" + encodeURIComponent(state.query));
+      replaceHash("#/r?q=" + encodeURIComponent(state.query) + libsParam());
       return;
     }
     replaceHash("#/");
@@ -2025,12 +2248,14 @@ window.MOCK = {
         go("#/");
         return;
       }
-      var libsParam = r.params.get("libs");
-      if (libsParam) {
-        var valid = libsParam.split(",").filter(function (id) {
+      var libsQuery = r.params.get("libs");
+      if (libsQuery) {
+        var valid = libsQuery.split(",").filter(function (id) {
           return libById(id);
         });
         if (valid.length) state.selected = valid;
+      } else {
+        state.selected = defaultSelection();
       }
       state.query = query;
       var isbn = r.params.get("isbn");
@@ -2150,29 +2375,19 @@ window.MOCK = {
       "</div></div>" +
       '<div class="opt"><span class="opt__label">도서관 <em>' +
       state.selected.length +
-      "곳 선택</em></span><div class=\"chips\">" +
-      cfg.libraries
-        .map(function (lib) {
-          var on = state.selected.indexOf(lib.id) >= 0 ? " is-on" : "";
-          var off = lib.enabled ? "" : " disabled";
-          var soon = lib.enabled ? "" : '<span class="chip__soon">준비 중</span>';
-          return (
-            '<button type="button" class="chip chip--' +
-            lib.kind +
-            on +
-            '" data-action="toggle-lib" data-id="' +
-            lib.id +
-            '"' +
-            off +
-            ">" +
-            '<span class="chip__dot"></span>' +
-            esc(lib.short) +
-            soon +
-            "</button>"
-          );
+      "곳 선택</em></span>" +
+      '<div class="libgroups">' +
+      cfg.groups
+        .filter(function (group) {
+          return cfg.libraries.some(function (lib) {
+            return lib.group === group.id && lib.enabled;
+          });
         })
+        .map(groupBlock)
         .join("") +
-      "</div></div>" +
+      "</div>" +
+      soonNote() +
+      "</div>" +
       '<button class="btn btn--primary" type="submit">통합 검색</button>' +
       "</form>" +
       "</section>" +
@@ -2188,6 +2403,64 @@ window.MOCK = {
       "</main>" +
       '<footer class="foot"><b>책모아</b> · 공공도서관 소장 정보는 도서관 정보나루 Open API를 사용합니다.<br>' +
       "대출 가능 여부는 전일 기준이므로 방문 전 도서관에 확인하세요.</footer>";
+  }
+
+  function groupBlock(group) {
+    var libs = cfg.libraries.filter(function (lib) {
+      return lib.group === group.id && lib.enabled;
+    });
+    var allOn = libs.every(function (lib) {
+      return state.selected.indexOf(lib.id) >= 0;
+    });
+
+    return (
+      '<div class="libgroup">' +
+      '<div class="libgroup__head"><span>' +
+      esc(group.label) +
+      "</span>" +
+      '<button type="button" class="libgroup__all" data-action="toggle-group" data-group="' +
+      group.id +
+      '">' +
+      (allOn ? "해제" : "전체") +
+      "</button></div>" +
+      '<div class="chips">' +
+      libs.map(libChip).join("") +
+      "</div></div>"
+    );
+  }
+
+  function libChip(lib) {
+    var on = state.selected.indexOf(lib.id) >= 0 ? " is-on" : "";
+    return (
+      '<button type="button" class="chip chip--' +
+      lib.kind +
+      on +
+      '" data-action="toggle-lib" data-id="' +
+      lib.id +
+      '">' +
+      '<span class="chip__dot"></span>' +
+      esc(lib.short) +
+      "</button>"
+    );
+  }
+
+  function soonNote() {
+    var soon = cfg.libraries.filter(function (lib) {
+      return !lib.enabled;
+    });
+    if (!soon.length) return "";
+    return (
+      '<p class="soon-note">준비 중 · ' +
+      soon
+        .map(function (lib) {
+          return (
+            esc(lib.short) +
+            ((lib.formats || []).indexOf("ebook") >= 0 ? " e-Book" : "")
+          );
+        })
+        .join(" · ") +
+      "</p>"
+    );
   }
 
   function recentBlock(recent) {
@@ -2228,7 +2501,8 @@ window.MOCK = {
       esc(lib.name) +
       "</p>" +
       '<p class="librow__meta">' +
-      (off ? "연동 준비 중" : "정보나루 · 소장 조회") +
+      esc(lib.note || "정보나루 · 소장 조회") +
+      (off ? " · 준비 중" : "") +
       "</p>" +
       "</div>" +
       '<div class="librow__right">' +
@@ -2395,8 +2669,11 @@ window.MOCK = {
       '<h3 class="libcard__name">' +
       esc(lib.name) +
       "</h3>" +
+      (lib.address
+        ? '<p class="libcard__addr">' + esc(lib.address) + "</p>"
+        : "") +
       '<div class="libcard__meta"><span class="fmt">' +
-      esc(formatLabel(state.book)) +
+      esc(formatLabelFor(lib)) +
       '</span><span class="status status--' +
       st.code +
       '">' +
@@ -2484,13 +2761,7 @@ window.MOCK = {
           return book.isbn13 === isbn;
         })[0];
         if (demoBook) {
-          state.selected = cfg.libraries
-            .filter(function (lib) {
-              return lib.enabled;
-            })
-            .map(function (lib) {
-              return lib.id;
-            });
+          state.selected = defaultSelection();
           state.query = "";
           state.books = [demoBook];
           state.book = demoBook;
@@ -2582,7 +2853,8 @@ window.MOCK = {
       esc(lib.name) +
       "</p>" +
       '<p class="holding__meta">' +
-      esc(formatLabel(state.book)) +
+      esc(formatLabelFor(lib)) +
+      (lib.address ? " · " + esc(lib.address) : "") +
       (link ? " · " + link : "") +
       "</p></div>" +
       '<div class="holding__right"><span class="status status--' +
@@ -2611,10 +2883,7 @@ window.MOCK = {
     }
     state.query = query;
     addRecent(query);
-    var target =
-      "#/r?q=" +
-      encodeURIComponent(query) +
-      (state.selected.length ? "&libs=" + encodeURIComponent(state.selected.join(",")) : "");
+    var target = "#/r?q=" + encodeURIComponent(query) + libsParam();
     go(target);
   }
 
@@ -2624,8 +2893,7 @@ window.MOCK = {
       encodeURIComponent(state.query) +
       "&isbn=" +
       encodeURIComponent(isbn) +
-      "&libs=" +
-      encodeURIComponent(state.selected.join(","));
+      libsParam();
     go(target);
   }
 
@@ -2668,6 +2936,37 @@ window.MOCK = {
         state.selected.splice(index, 1);
       } else {
         state.selected.push(id);
+      }
+      renderHome();
+      return;
+    }
+
+    if (action === "toggle-group") {
+      var groupId = el.getAttribute("data-group");
+      var groupIds = cfg.libraries
+        .filter(function (lib) {
+          return lib.group === groupId && lib.enabled;
+        })
+        .map(function (lib) {
+          return lib.id;
+        });
+      var groupAllOn = groupIds.every(function (id) {
+        return state.selected.indexOf(id) >= 0;
+      });
+
+      if (groupAllOn) {
+        var remain = state.selected.filter(function (id) {
+          return groupIds.indexOf(id) < 0;
+        });
+        if (!remain.length) {
+          toast("도서관을 한 곳 이상 선택해 주세요");
+          return;
+        }
+        state.selected = remain;
+      } else {
+        groupIds.forEach(function (id) {
+          if (state.selected.indexOf(id) < 0) state.selected.push(id);
+        });
       }
       renderHome();
       return;
