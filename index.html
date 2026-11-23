@@ -497,6 +497,13 @@ a {
   color: var(--ink);
 }
 
+.section__origin {
+  margin-left: auto;
+  font-size: 11px;
+  font-weight: 600;
+  color: #a29a88;
+}
+
 .liblist {
   list-style: none;
   margin: 0;
@@ -1305,8 +1312,9 @@ window.APP_CONFIG = {
   appName: "책모아",
   apiBase: "",
 
-  /* 거리 계산 기준점. "가까운 순" 정렬에 사용됩니다. */
-  origin: { label: "광양시청", lat: 34.9406, lng: 127.6956 },
+  /* 거리 계산 기준점. "가까운 순" 정렬에 사용됩니다.
+     N34° 56.071' E127° 43.353' → 34.93452, 127.72255 */
+  origin: { label: "내 위치", lat: 34.93452, lng: 127.72255 },
 
   /* 화면에서 묶어 보여 줄 도서관 그룹 */
   groups: [
@@ -1477,9 +1485,9 @@ window.APP_CONFIG = {
       group: "corp",
       kind: "corporate",
       kindLabel: "기업",
-      address: "경상북도 포항시 남구 동해안로 6261",
-      lat: 36.0194,
-      lng: 129.3435,
+      address: "전라남도 광양시 금호동 700 (광양제철소)",
+      lat: 34.9095,
+      lng: 127.7525,
       formats: ["ebook"],
       note: "e-Book 전용",
       homepage: "",
@@ -2395,7 +2403,10 @@ window.MOCK = {
       '<section class="section">' +
       '<h2 class="section__title"><b>' +
       cfg.libraries.length +
-      "곳</b>의 도서관</h2>" +
+      "곳</b>의 도서관" +
+      '<span class="section__origin">' +
+      esc(cfg.origin.label) +
+      " 기준</span></h2>" +
       '<ul class="liblist">' +
       ranked.map(libRow).join("") +
       "</ul>" +
