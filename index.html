@@ -664,6 +664,8 @@ a {
   height: 100%;
   object-fit: cover;
   z-index: 2;
+  -webkit-user-drag: none;
+  user-select: none;
 }
 
 .cover__fallback {
@@ -2118,7 +2120,9 @@ window.MOCK = {
     var hue = hashCode(book.isbn13 || book.title) % 360;
     var cls = size ? " cover--" + size : "";
     var img = book.cover
-      ? '<img src="' + esc(safeCover(book.cover)) + '" alt="" loading="lazy" onerror="this.remove()">'
+      ? '<img src="' +
+        esc(safeCover(book.cover)) +
+        '" alt="" loading="lazy" draggable="false" onerror="this.remove()">'
       : "";
     return (
       '<span class="cover' +
@@ -2935,6 +2939,11 @@ window.MOCK = {
 
     strip.addEventListener("pointerup", finish);
     strip.addEventListener("pointercancel", finish);
+
+    /* 표지 이미지의 네이티브 드래그가 시작되면 포인터 이벤트가 끊긴다. */
+    strip.addEventListener("dragstart", function (event) {
+      event.preventDefault();
+    });
 
     /* 카드 선택은 여기서 직접 처리하고, 드래그 직후의 클릭은 무시한다. */
     strip.addEventListener(
