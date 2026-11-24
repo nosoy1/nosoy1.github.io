@@ -1426,6 +1426,17 @@ a {
    도서관 좌표는 OpenStreetMap 기준 대략값입니다.
    거리 정렬에만 쓰이므로 필요하면 자유롭게 수정하세요.
    ========================================================= */
+
+/* 도서관별 상세검색 URL. {q} 자리에 책 제목이 들어갑니다. */
+var GWANGYANG_LIB_SEARCH =
+  "https://lib.gwangyang.go.kr/lib/book/search/searchIndex.do?searchType=&menuCd=L001001001&search={q}";
+var GYLIB_SEARCH =
+  "https://gylib.jne.go.kr/book/search_book/search.es?mid=a50101010100&vSrchKey0=1&vSrchText0={q}";
+var GYLIFE_SEARCH =
+  "https://gylife.jne.go.kr/book/search_book/search.es?mid=c30101010100&vSrchKey0=1&vSrchText0={q}";
+var GWANGYANG_EBOOK_SEARCH =
+  "https://gwangyanglib.dkyobobook.co.kr/search/searchList.ink?schClst=all&schDvsn=000&orderByKey=&schTxt={q}";
+
 window.APP_CONFIG = {
   appName: "책모아",
   apiBase: "https://chaekmoa-api.nosoy1-b7b.workers.dev",
@@ -1444,7 +1455,8 @@ window.APP_CONFIG = {
 
   /* 검색 대상 도서관.
      enabled: false 인 곳은 화면에 "준비 중"으로 표시됩니다.
-     formats: 해당 도서관이 다루는 자료 유형 (paper=종이책, ebook=전자책) */
+     formats: 해당 도서관이 다루는 자료 유형 (paper=종이책, ebook=전자책)
+     searchUrl: "도서관에서 검색" 링크. {q} 에 제목이 들어갑니다. */
   libraries: [
     {
       id: "gwangyeong",
@@ -1458,7 +1470,8 @@ window.APP_CONFIG = {
       lng: 127.7164,
       formats: ["paper"],
       note: "정보나루 · 종이책",
-      homepage: "",
+      homepage: "https://lib.gwangyang.go.kr",
+      searchUrl: GWANGYANG_LIB_SEARCH,
       enabled: true
     },
     {
@@ -1473,7 +1486,8 @@ window.APP_CONFIG = {
       lng: 127.7393,
       formats: ["paper"],
       note: "정보나루 · 종이책",
-      homepage: "",
+      homepage: "https://lib.gwangyang.go.kr",
+      searchUrl: GWANGYANG_LIB_SEARCH,
       enabled: true
     },
     {
@@ -1488,7 +1502,8 @@ window.APP_CONFIG = {
       lng: 127.69042,
       formats: ["paper"],
       note: "정보나루 · 종이책",
-      homepage: "",
+      homepage: "https://lib.gwangyang.go.kr",
+      searchUrl: GWANGYANG_LIB_SEARCH,
       enabled: true
     },
     {
@@ -1503,7 +1518,8 @@ window.APP_CONFIG = {
       lng: 127.581,
       formats: ["paper"],
       note: "정보나루 · 종이책",
-      homepage: "",
+      homepage: "https://lib.gwangyang.go.kr",
+      searchUrl: GWANGYANG_LIB_SEARCH,
       enabled: true
     },
     {
@@ -1518,7 +1534,24 @@ window.APP_CONFIG = {
       lng: 127.58261,
       formats: ["paper"],
       note: "정보나루 · 종이책",
-      homepage: "",
+      homepage: "https://lib.gwangyang.go.kr",
+      searchUrl: GWANGYANG_LIB_SEARCH,
+      enabled: true
+    },
+    {
+      id: "gwangyang_ebook",
+      name: "광양시 도서관 전자책",
+      short: "광양 e-Book",
+      group: "city",
+      kind: "public",
+      kindLabel: "공공",
+      address: "광양시립도서관 전자책 서비스 (온라인)",
+      lat: 34.93757,
+      lng: 127.69042,
+      formats: ["ebook"],
+      note: "e-Book 전용",
+      homepage: "https://gwangyanglib.dkyobobook.co.kr",
+      searchUrl: GWANGYANG_EBOOK_SEARCH,
       enabled: true
     },
     {
@@ -1533,7 +1566,8 @@ window.APP_CONFIG = {
       lng: 127.6985,
       formats: ["paper"],
       note: "정보나루 · 종이책",
-      homepage: "https://grlib.jne.go.kr",
+      homepage: "https://gylib.jne.go.kr",
+      searchUrl: GYLIB_SEARCH,
       enabled: true
     },
     {
@@ -1548,7 +1582,8 @@ window.APP_CONFIG = {
       lng: 127.7163,
       formats: ["paper"],
       note: "정보나루 · 종이책",
-      homepage: "https://grlib.jne.go.kr",
+      homepage: "https://gylife.jne.go.kr",
+      searchUrl: GYLIFE_SEARCH,
       enabled: true
     },
     {
