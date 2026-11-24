@@ -2053,7 +2053,16 @@ window.MOCK = {
   }
 
   function directSearchUrl(lib, title) {
-    if (!lib || !lib.searchUrl) return "";
+    if (!lib) return "";
+
+    /* 포스코는 EUC-KR 사이트라 UTF-8 퍼센트 인코딩을 보내면 한글이 깨진다.
+       Worker(/api/go/posco)가 EUC-KR로 인코딩해 302 리다이렉트한다. */
+    if (lib.id === "posco") {
+      if (!apiBase()) return "https://posco.yes24library.com/";
+      return apiBase() + "/api/go/posco?q=" + encodeURIComponent(title || "");
+    }
+
+    if (!lib.searchUrl) return "";
     return lib.searchUrl.replace("{q}", encodeURIComponent(title || ""));
   }
 
