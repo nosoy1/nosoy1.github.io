@@ -735,13 +735,29 @@ a {
   display: flex;
   gap: 9px;
   overflow-x: auto;
-  padding: 4px 2px 10px;
+  overscroll-behavior-x: contain;
+  padding: 4px 2px 12px;
   margin: 14px -2px 0;
-  scrollbar-width: none;
+  cursor: grab;
+  scrollbar-width: thin;
+  scrollbar-color: var(--line-strong) transparent;
 }
 
 .strip::-webkit-scrollbar {
-  display: none;
+  height: 6px;
+}
+
+.strip::-webkit-scrollbar-thumb {
+  background: var(--line-strong);
+  border-radius: 999px;
+}
+
+.strip::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.strip.is-dragging {
+  cursor: grabbing;
 }
 
 .strip__item {
@@ -756,6 +772,8 @@ a {
   background: #fff;
   cursor: pointer;
   text-align: left;
+  user-select: none;
+  -webkit-user-drag: none;
 }
 
 .strip__item.is-active {
@@ -771,6 +789,106 @@ a {
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
+}
+
+/* ---------- 책 검색 결과 (카카오) ---------- */
+.search-note {
+  margin: 10px 2px 0;
+  font-size: 12px;
+  line-height: 1.55;
+  color: var(--muted);
+}
+
+.booksearch {
+  margin-top: 18px;
+}
+
+.booksearch .btn--primary {
+  margin-top: 10px;
+  height: 48px;
+  font-size: 15px;
+}
+
+.booklist {
+  list-style: none;
+  margin: 12px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+
+.bookrow__btn {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  width: 100%;
+  padding: 11px 14px 11px 11px;
+  border: 1.5px solid var(--line);
+  border-radius: 16px;
+  background: #fff;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.12s ease;
+}
+
+.bookrow__btn:hover {
+  border-color: var(--ink);
+  box-shadow: 0 10px 24px -18px rgba(23, 21, 15, 0.5);
+}
+
+.bookrow__btn:active {
+  transform: translateY(1px);
+}
+
+.bookrow__body {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+  flex: 1;
+}
+
+.bookrow__title {
+  font-size: 15px;
+  font-weight: 800;
+  line-height: 1.35;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.bookrow__meta {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.bookrow__isbn {
+  font-size: 11px;
+  color: #a29a88;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.01em;
+}
+
+.bookrow__go {
+  flex: none;
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--ink);
+  background: var(--yellow);
+  border-radius: 999px;
+  padding: 7px 11px;
+}
+
+.result-tools {
+  display: flex;
+  justify-content: flex-start;
+  margin: 8px 2px 0;
 }
 
 /* ---------- 결과 카드 ---------- */
@@ -1310,7 +1428,7 @@ a {
    ========================================================= */
 window.APP_CONFIG = {
   appName: "책모아",
-  apiBase: "",
+  apiBase: "https://chaekmoa-api.nosoy1-b7b.workers.dev",
 
   /* 거리 계산 기준점. "가까운 순" 정렬에 사용됩니다.
      N34° 56.071' E127° 43.353' → 34.93452, 127.72255 */
@@ -1353,21 +1471,6 @@ window.APP_CONFIG = {
       address: "전라남도 광양시 초원길 42",
       lat: 34.9259,
       lng: 127.7393,
-      formats: ["paper"],
-      note: "정보나루 · 종이책",
-      homepage: "",
-      enabled: true
-    },
-    {
-      id: "okgok",
-      name: "광양옥곡도서관",
-      short: "옥곡",
-      group: "city",
-      kind: "public",
-      kindLabel: "공공",
-      address: "전라남도 광양시 광양읍 기두5길 5",
-      lat: 34.994,
-      lng: 127.6791,
       formats: ["paper"],
       note: "정보나루 · 종이책",
       homepage: "",
@@ -1449,34 +1552,21 @@ window.APP_CONFIG = {
       enabled: true
     },
     {
-      id: "jnu_gwangju",
-      name: "전남대학교 중앙도서관",
-      short: "전남대(광주)",
+      id: "jnu_ebook",
+      name: "전남대학교 전자책도서관",
+      short: "전남대 e-Book",
       group: "univ",
       kind: "university",
       kindLabel: "대학",
-      address: "광주광역시 북구 용봉로 77",
+      address: "광주 북구 용봉로 77 · 여수 대학로 50",
       lat: 35.1767,
       lng: 126.9052,
-      formats: ["paper"],
-      note: "웹 파서 예정",
-      homepage: "https://library.jnu.ac.kr",
-      enabled: false
-    },
-    {
-      id: "jnu_yeosu",
-      name: "전남대학교 여수캠퍼스 도서관",
-      short: "전남대(여수)",
-      group: "univ",
-      kind: "university",
-      kindLabel: "대학",
-      address: "전라남도 여수시 대학로 50",
-      lat: 34.7699,
-      lng: 127.7004,
-      formats: ["paper"],
-      note: "웹 파서 예정",
-      homepage: "https://yosulib.jnu.ac.kr",
-      enabled: false
+      formats: ["ebook"],
+      note: "e-Book 전용",
+      homepage: "https://ebook.jnu.ac.kr:444",
+      searchUrl:
+        "https://ebook.jnu.ac.kr:444/elibrary-front/search/searchList.ink?schClst=all&schDvsn=000&orderByKey=&schTxt={q}",
+      enabled: true
     },
     {
       id: "posco",
@@ -1491,7 +1581,8 @@ window.APP_CONFIG = {
       formats: ["ebook"],
       note: "e-Book 전용",
       homepage: "",
-      enabled: false
+      searchUrl: "https://posco.yes24library.com/search/?srch_order=total&src_key={q}",
+      enabled: true
     }
   ]
 };
@@ -1520,7 +1611,6 @@ window.MOCK = {
       holdings: {
         gwangyeong: { has: "Y", loan: "Y" },
         geumho: { has: "Y", loan: "N" },
-        okgok: { has: "N", loan: "N" },
         jungma: { has: "Y", loan: "Y" },
         jungang: { has: "Y", loan: "N" },
         huimang: { has: "Y", loan: "Y" },
@@ -1542,7 +1632,6 @@ window.MOCK = {
       holdings: {
         gwangyeong: { has: "Y", loan: "N" },
         geumho: { has: "Y", loan: "Y" },
-        okgok: { has: "N", loan: "N" },
         jungma: { has: "Y", loan: "N" },
         jungang: { has: "Y", loan: "Y" },
         huimang: { has: "N", loan: "N" },
@@ -1564,7 +1653,6 @@ window.MOCK = {
       holdings: {
         gwangyeong: { has: "N", loan: "N" },
         geumho: { has: "Y", loan: "Y" },
-        okgok: { has: "Y", loan: "N" },
         jungma: { has: "Y", loan: "Y" },
         jungang: { has: "N", loan: "N" },
         huimang: { has: "Y", loan: "Y" },
@@ -1586,7 +1674,6 @@ window.MOCK = {
       holdings: {
         gwangyeong: { has: "Y", loan: "Y" },
         geumho: { has: "N", loan: "N" },
-        okgok: { has: "Y", loan: "Y" },
         jungma: { has: "Y", loan: "N" },
         jungang: { has: "Y", loan: "Y" },
         huimang: { has: "N", loan: "N" },
@@ -1608,7 +1695,6 @@ window.MOCK = {
       holdings: {
         gwangyeong: { has: "Y", loan: "Y" },
         geumho: { has: "Y", loan: "Y" },
-        okgok: { has: "N", loan: "N" },
         jungma: { has: "Y", loan: "Y" },
         jungang: { has: "Y", loan: "Y" },
         huimang: { has: "N", loan: "N" },
@@ -1630,7 +1716,6 @@ window.MOCK = {
       holdings: {
         gwangyeong: { has: "N", loan: "N" },
         geumho: { has: "Y", loan: "N" },
-        okgok: { has: "N", loan: "N" },
         jungma: { has: "Y", loan: "N" },
         jungang: { has: "Y", loan: "Y" },
         huimang: { has: "N", loan: "N" },
@@ -1888,7 +1973,6 @@ window.MOCK = {
   var state = {
     mode: cfg.apiBase ? "live" : "demo",
     query: "",
-    material: "all",
     selected: defaultSelection(),
     books: [],
     book: null,
@@ -1896,7 +1980,8 @@ window.MOCK = {
     error: null
   };
 
-  var cache = { search: new Map(), holdings: new Map() };
+  var cache = { books: new Map(), holdings: new Map() };
+  var bookCache = new Map();
   var routeToken = 0;
 
   /* ---------------------------------------------------------
@@ -1920,15 +2005,6 @@ window.MOCK = {
     return cfg.libraries.filter(function (lib) {
       return lib.id === id;
     })[0];
-  }
-
-  function libNames(ids) {
-    return ids
-      .map(function (id) {
-        var lib = libById(id);
-        return lib ? lib.short : id;
-      })
-      .join(" · ");
   }
 
   function defaultSelection() {
@@ -1974,6 +2050,11 @@ window.MOCK = {
         return f === "ebook" ? "전자책" : "종이책";
       })
       .join(" · ");
+  }
+
+  function directSearchUrl(lib, title) {
+    if (!lib || !lib.searchUrl) return "";
+    return lib.searchUrl.replace("{q}", encodeURIComponent(title || ""));
   }
 
   function hashCode(text) {
@@ -2087,7 +2168,10 @@ window.MOCK = {
             var message =
               (data && data.message) ||
               "검색 서버가 잠시 응답하지 않아요. 잠시 후 다시 시도해 주세요.";
-            throw new ApiError(code === "missing_key" ? "no_key" : "server", message);
+            var kind = "server";
+            if (code === "missing_key") kind = "no_key";
+            else if (code === "missing_kakao_key") kind = "no_kakao_key";
+            throw new ApiError(kind, message);
           }
           return data || {};
         });
@@ -2119,18 +2203,17 @@ window.MOCK = {
     };
   }
 
-  function apiSearch(query) {
+  /* 카카오 책 검색 결과. ISBN 이 있어야 도서관 소장을 조회할 수 있다. */
+  function apiBooks(query) {
     if (state.mode === "demo") {
-      return wait(430).then(function () {
-        return core.searchMock(query, state.material, BOOKS);
+      return wait(380).then(function () {
+        var exact = BOOKS.filter(function (book) {
+          return book.isbn13 === String(query).replace(/[^0-9Xx]/g, "");
+        })[0];
+        return exact ? [exact] : core.searchMock(query, "all", BOOKS);
       });
     }
-    var url =
-      apiBase() +
-      "/api/search?q=" +
-      encodeURIComponent(query) +
-      "&material=" +
-      encodeURIComponent(state.material);
+    var url = apiBase() + "/api/books?q=" + encodeURIComponent(query);
     return fetchJson(url).then(function (data) {
       return (data.books || [])
         .map(toBook)
@@ -2150,6 +2233,10 @@ window.MOCK = {
       apiBase() +
       "/api/holdings?isbn=" +
       encodeURIComponent(book.isbn13) +
+      "&title=" +
+      encodeURIComponent(book.title || "") +
+      "&authors=" +
+      encodeURIComponent(book.authors || "") +
       "&libs=" +
       encodeURIComponent(state.selected.join(","));
     return fetchJson(url).then(function (data) {
@@ -2157,15 +2244,48 @@ window.MOCK = {
     });
   }
 
-  function getSearch(query) {
-    var key = query + "|" + state.material;
-    if (cache.search.has(key)) return cache.search.get(key);
-    var promise = apiSearch(query).catch(function (err) {
-      cache.search.delete(key);
-      throw err;
+  function rememberBooks(books) {
+    (books || []).forEach(function (book) {
+      if (book && book.isbn13) bookCache.set(book.isbn13, book);
     });
-    cache.search.set(key, promise);
+  }
+
+  function getBooks(query) {
+    var key = String(query);
+    if (cache.books.has(key)) return cache.books.get(key);
+    var promise = apiBooks(query)
+      .then(function (books) {
+        rememberBooks(books);
+        return books;
+      })
+      .catch(function (err) {
+        cache.books.delete(key);
+        throw err;
+      });
+    cache.books.set(key, promise);
     return promise;
+  }
+
+  /** ISBN 으로 도서 1건 확인 (검색 결과 · 스냅샷 · 카카오 ISBN 조회 순) */
+  function getBook(isbn) {
+    if (bookCache.has(isbn)) return Promise.resolve(bookCache.get(isbn));
+
+    var known = (state.books || []).filter(function (book) {
+      return book.isbn13 === isbn;
+    })[0];
+    if (known) {
+      bookCache.set(isbn, known);
+      return Promise.resolve(known);
+    }
+
+    return apiBooks(isbn).then(function (books) {
+      rememberBooks(books);
+      return (
+        books.filter(function (book) {
+          return book.isbn13 === isbn;
+        })[0] || null
+      );
+    });
   }
 
   function getHoldings(book) {
@@ -2195,7 +2315,8 @@ window.MOCK = {
       return {
         lib: lib,
         hasBook: found.hasBook,
-        loanAvailable: found.loanAvailable
+        loanAvailable: found.loanAvailable,
+        note: found.note || ""
       };
     });
   }
@@ -2224,11 +2345,28 @@ window.MOCK = {
 
   function goBack() {
     var r = parseRoute();
-    if (r.name === "b" && state.query) {
-      replaceHash("#/r?q=" + encodeURIComponent(state.query) + libsParam());
+    if (r.name === "b") {
+      if (state.book) {
+        replaceHash(
+          "#/r?isbn=" + encodeURIComponent(state.book.isbn13) + queryParam() + libsParam()
+        );
+      } else if (state.query) {
+        replaceHash("#/k?q=" + encodeURIComponent(state.query));
+      } else {
+        replaceHash("#/");
+      }
+      return;
+    }
+    if (r.name === "r") {
+      if (state.query) replaceHash("#/k?q=" + encodeURIComponent(state.query));
+      else replaceHash("#/");
       return;
     }
     replaceHash("#/");
+  }
+
+  function queryParam() {
+    return state.query ? "&q=" + encodeURIComponent(state.query) : "";
   }
 
   function replaceHash(hash) {
@@ -2245,17 +2383,51 @@ window.MOCK = {
 
     if (r.name === "home") {
       state.query = "";
+      state.books = [];
       state.error = null;
       renderHome();
       return;
     }
 
-    if (r.name === "r") {
-      var query = (r.params.get("q") || "").trim();
-      if (!query) {
+    if (r.name === "k") {
+      var keyword = (r.params.get("q") || "").trim();
+      if (!keyword) {
         go("#/");
         return;
       }
+      state.query = keyword;
+      renderLoading("책을 찾는 중", "카카오 책 검색에서 ‘" + keyword + "’를 찾고 있어요.");
+      try {
+        var found = await getBooks(keyword);
+        if (token !== routeToken) return;
+        if (!found.length) {
+          renderBookEmpty(keyword);
+          return;
+        }
+        state.books = found;
+        renderBookSearch();
+      } catch (err) {
+        if (token !== routeToken) return;
+        state.error = err;
+        renderError(err);
+      }
+      return;
+    }
+
+    if (r.name === "r") {
+      var isbn = (r.params.get("isbn") || "").replace(/[^0-9Xx]/g, "").toUpperCase();
+
+      /* 예전 제목 검색 링크는 카카오 책 검색으로 보낸다. */
+      if (!isbn) {
+        var legacy = (r.params.get("q") || "").trim();
+        if (legacy) {
+          replaceHash("#/k?q=" + encodeURIComponent(legacy));
+          return;
+        }
+        go("#/");
+        return;
+      }
+
       var libsQuery = r.params.get("libs");
       if (libsQuery) {
         var valid = libsQuery.split(",").filter(function (id) {
@@ -2265,24 +2437,24 @@ window.MOCK = {
       } else {
         state.selected = defaultSelection();
       }
-      state.query = query;
-      var isbn = r.params.get("isbn");
 
-      renderLoading();
+      var query = (r.params.get("q") || "").trim();
+      if (query) state.query = query;
+
+      renderLoading("소장 확인 중", "선택한 책의 ISBN으로 도서관 소장을 확인하고 있어요.");
       try {
-        var books = await getSearch(query);
+        var book = await getBook(isbn);
         if (token !== routeToken) return;
-        if (!books.length) {
-          renderEmpty(query);
+        if (!book) {
+          renderBookMissing(isbn);
           return;
         }
-        var picked =
-          books.filter(function (book) {
-            return book.isbn13 === isbn;
-          })[0] || books[0];
-        state.books = books;
-        state.book = picked;
-        state.holdings = await getHoldings(picked);
+        state.book = book;
+        var inList = state.books.some(function (item) {
+          return item.isbn13 === isbn;
+        });
+        if (!inList) state.books = [book];
+        state.holdings = await getHoldings(book);
         if (token !== routeToken) return;
         saveSnapshot();
         renderResults();
@@ -2295,7 +2467,7 @@ window.MOCK = {
     }
 
     if (r.name === "b") {
-      showDetail(r.params);
+      await showDetail(r.params, token);
       return;
     }
 
@@ -2341,11 +2513,6 @@ window.MOCK = {
     state.error = null;
     var recent = getRecent();
     var ranked = core.rankLibraries(cfg.libraries, cfg.origin);
-    var materials = [
-      ["all", "전체"],
-      ["paper", "종이책"],
-      ["ebook", "전자책"]
-    ];
 
     app.innerHTML =
       '<header class="hero"><div class="hero__inner">' +
@@ -2359,28 +2526,13 @@ window.MOCK = {
       '<div class="field"><span class="field__icon">' +
       ICON.search +
       "</span>" +
-      '<label class="sr-only" for="q">도서명, 저자, ISBN 검색</label>' +
+      '<label class="sr-only" for="q">책 제목, 저자, ISBN 검색</label>' +
       '<input id="q" name="q" type="search" enterkeyhint="search" ' +
-      'placeholder="도서명, 저자, ISBN" value="' +
+      'placeholder="책 제목, 저자, ISBN" value="' +
       esc(state.query) +
       '">' +
       "</div>" +
-      '<div class="opt"><span class="opt__label">자료 유형</span><div class="chips">' +
-      materials
-        .map(function (pair) {
-          var on = state.material === pair[0] ? " is-on" : "";
-          return (
-            '<button type="button" class="chip' +
-            on +
-            '" data-action="material" data-value="' +
-            pair[0] +
-            '">' +
-            pair[1] +
-            "</button>"
-          );
-        })
-        .join("") +
-      "</div></div>" +
+      '<p class="search-note">카카오 책 검색에서 정확한 판본을 고르면, 그 ISBN으로 도서관 소장을 확인해요.</p>' +
       '<div class="opt"><span class="opt__label">도서관 <em>' +
       state.selected.length +
       "곳 선택</em></span>" +
@@ -2396,7 +2548,7 @@ window.MOCK = {
       "</div>" +
       soonNote() +
       "</div>" +
-      '<button class="btn btn--primary" type="submit">통합 검색</button>' +
+      '<button class="btn btn--primary" type="submit">책 검색</button>' +
       "</form>" +
       "</section>" +
       recentBlock(recent) +
@@ -2412,8 +2564,9 @@ window.MOCK = {
       "</ul>" +
       "</section>" +
       "</main>" +
-      '<footer class="foot"><b>책모아</b> · 공공도서관 소장 정보는 도서관 정보나루 Open API를 사용합니다.<br>' +
-      "대출 가능 여부는 전일 기준이므로 방문 전 도서관에 확인하세요.</footer>";
+      '<footer class="foot"><b>책모아</b> · ' +
+      (state.mode === "live" ? "실시간 연동" : "데모 데이터") +
+      "<br>도서 정보는 카카오 책 검색, 소장 정보는 도서관 정보나루 Open API를 사용합니다. 대출 가능 여부는 전일 기준이므로 방문 전 확인하세요.</footer>";
   }
 
   function groupBlock(group) {
@@ -2526,9 +2679,8 @@ window.MOCK = {
   /* ---------------------------------------------------------
      로딩
      --------------------------------------------------------- */
-  function renderLoading() {
-    document.title = "검색 중 — 책모아";
-    var names = libNames(state.selected);
+  function renderLoading(title, message) {
+    document.title = title + " — 책모아";
     var skeleton = "";
     for (var i = 0; i < 3; i += 1) {
       skeleton +=
@@ -2540,14 +2692,16 @@ window.MOCK = {
     }
 
     app.innerHTML =
-      topBar("검색 중") +
+      topBar(title) +
       '<main class="page">' +
       '<div class="loading" role="status" aria-live="polite">' +
       '<span class="dots"><i></i><i></i><i></i></span>' +
-      "<h2>도서관을 뒤지는 중…</h2>" +
+      "<h2>" +
+      esc(title) +
+      "</h2>" +
       "<p>" +
-      esc(names) +
-      "의 소장 정보를 확인하고 있어요.</p>" +
+      esc(message || "") +
+      "</p>" +
       "</div>" +
       skeleton +
       "</main>";
@@ -2573,6 +2727,64 @@ window.MOCK = {
     );
   }
 
+  /* ---------------------------------------------------------
+     책 검색 (카카오) 결과
+     --------------------------------------------------------- */
+  function renderBookSearch() {
+    document.title = "책 검색 — 책모아";
+    window.scrollTo(0, 0);
+
+    app.innerHTML =
+      topBar("책 검색") +
+      '<main class="page">' +
+      '<form id="search-form" class="booksearch" autocomplete="off" novalidate>' +
+      '<div class="field"><span class="field__icon">' +
+      ICON.search +
+      "</span>" +
+      '<label class="sr-only" for="q">책 제목, 저자, ISBN 검색</label>' +
+      '<input id="q" name="q" type="search" enterkeyhint="search" ' +
+      'placeholder="책 제목, 저자, ISBN" value="' +
+      esc(state.query) +
+      '">' +
+      "</div>" +
+      '<button class="btn btn--primary" type="submit">다시 검색</button>' +
+      "</form>" +
+      '<div class="result-head"><span>‘' +
+      esc(state.query) +
+      "’ 검색 결과</span><span>" +
+      state.books.length +
+      "권</span></div>" +
+      '<ul class="booklist">' +
+      state.books.map(bookRow).join("") +
+      "</ul>" +
+      '<p class="disclaimer">책을 고르면 그 ISBN으로 도서관 소장을 확인합니다.</p>' +
+      "</main>";
+  }
+
+  function bookRow(book) {
+    return (
+      '<li class="bookrow">' +
+      '<button class="bookrow__btn" data-action="select-book" data-isbn="' +
+      esc(book.isbn13) +
+      '">' +
+      coverHtml(book, "sm") +
+      '<span class="bookrow__body">' +
+      '<span class="bookrow__title">' +
+      esc(book.title) +
+      "</span>" +
+      '<span class="bookrow__meta">' +
+      esc(book.authors || "저자 미상") +
+      (book.publisher ? " · " + esc(book.publisher) : "") +
+      (book.year ? " · " + book.year : "") +
+      "</span>" +
+      '<span class="bookrow__isbn">ISBN ' +
+      esc(book.isbn13) +
+      "</span></span>" +
+      '<span class="bookrow__go">소장 확인</span>' +
+      "</button></li>"
+    );
+  }
+
   function renderResults() {
     var book = state.book;
     var rows = state.holdings;
@@ -2587,9 +2799,14 @@ window.MOCK = {
     window.scrollTo(0, 0);
 
     app.innerHTML =
-      topBar("검색 결과") +
+      topBar("소장 확인") +
       '<main class="page">' +
       bookHead(book, rows.length, owned, available) +
+      (state.query
+        ? '<div class="result-tools"><button class="link" data-action="book-search">← ‘' +
+          esc(state.query) +
+          "’ 다른 책 찾기</button></div>"
+        : "") +
       strip(book) +
       '<div class="result-head"><span>가까운 도서관 순</span><span>' +
       rows.length +
@@ -2601,6 +2818,98 @@ window.MOCK = {
       esc(cfg.origin.label) +
       " 기준 직선거리입니다. 대출 가능 여부는 전일 기준이며 도서관 사정에 따라 달라질 수 있어요.</p>" +
       "</main>";
+
+    enableStripDrag();
+  }
+
+  /** 후보 책 가로 목록을 마우스 드래그로 스크롤 */
+  function enableStripDrag() {
+    var strip =
+      typeof app.querySelector === "function" ? app.querySelector(".strip") : null;
+    if (!strip || strip.dataset.dragReady) return;
+    strip.dataset.dragReady = "1";
+
+    var down = false;
+    var captured = false;
+    var startX = 0;
+    var startScroll = 0;
+    var moved = false;
+
+    strip.addEventListener("pointerdown", function (event) {
+      if (event.pointerType !== "mouse" || event.button !== 0) return;
+      down = true;
+      moved = false;
+      captured = false;
+      startX = event.clientX;
+      startScroll = strip.scrollLeft;
+    });
+
+    strip.addEventListener(
+      "pointermove",
+      function (event) {
+        if (!down) return;
+        var dx = event.clientX - startX;
+        if (!moved && Math.abs(dx) > 4) {
+          moved = true;
+          strip.classList.add("is-dragging");
+          /* 실제 드래그가 시작된 뒤에만 캡처한다.
+             pointerdown 에서 캡처하면 단순 클릭의 target 이 strip 으로 바뀐다. */
+          try {
+            strip.setPointerCapture(event.pointerId);
+            captured = true;
+          } catch (err) {
+            /* ignore */
+          }
+        }
+        if (!moved) return;
+        event.preventDefault();
+        strip.scrollLeft = startScroll - dx;
+      },
+      { passive: false }
+    );
+
+    function finish(event) {
+      if (!down) return;
+      down = false;
+      strip.classList.remove("is-dragging");
+      if (captured) {
+        captured = false;
+        try {
+          strip.releasePointerCapture(event.pointerId);
+        } catch (err) {
+          /* ignore */
+        }
+      }
+      /* 드래그 직후 click 이 오지 않는 경우(포인터 취소 등)에도
+         다음 클릭이 무시되지 않도록 잠시 뒤 플래그를 푼다. */
+      if (moved) {
+        setTimeout(function () {
+          moved = false;
+        }, 350);
+      }
+    }
+
+    strip.addEventListener("pointerup", finish);
+    strip.addEventListener("pointercancel", finish);
+
+    /* 카드 선택은 여기서 직접 처리하고, 드래그 직후의 클릭은 무시한다. */
+    strip.addEventListener(
+      "click",
+      function (event) {
+        if (moved) {
+          event.preventDefault();
+          event.stopPropagation();
+          moved = false;
+          return;
+        }
+        var item = event.target.closest && event.target.closest(".strip__item");
+        if (!item) return;
+        event.preventDefault();
+        event.stopPropagation();
+        selectBook(item.getAttribute("data-isbn"));
+      },
+      true
+    );
   }
 
   function bookHead(book, total, owned, available) {
@@ -2635,7 +2944,6 @@ window.MOCK = {
     return (
       '<div class="strip" aria-label="검색된 다른 책">' +
       state.books
-        .slice(0, 8)
         .map(function (book) {
           var on = book.isbn13 === current.isbn13 ? " is-active" : "";
           return (
@@ -2658,10 +2966,24 @@ window.MOCK = {
   function libCard(row) {
     var lib = row.lib;
     var st = core.statusOf(row.hasBook, row.loanAvailable);
+    var hint = st.hint;
+    if (row.note === "no_libcode") {
+      hint = "정보나루에 참여하지 않는 도서관이에요.";
+    } else if (row.note === "title_match") {
+      hint = "제목 기준으로 확인했어요. " + hint;
+    } else if (row.note === "source_error") {
+      hint = "이 도서관은 외부 자동 조회를 막고 있어요. '도서관에서 검색'으로 확인해 주세요.";
+    }
     var home = lib.homepage
       ? '<a class="link link--muted" href="' +
         esc(lib.homepage) +
         '" target="_blank" rel="noopener noreferrer">도서관 홈페이지 ↗</a>'
+      : "";
+    var direct = directSearchUrl(lib, state.book && state.book.title);
+    var directLink = direct
+      ? '<a class="link" href="' +
+        esc(direct) +
+        '" target="_blank" rel="noopener noreferrer">도서관에서 검색 ↗</a>'
       : "";
 
     return (
@@ -2691,13 +3013,14 @@ window.MOCK = {
       st.label +
       "</span></div>" +
       '<p class="libcard__hint">' +
-      st.hint +
+      hint +
       "</p>" +
       '<div class="libcard__foot">' +
       '<button class="link" data-action="detail" data-isbn="' +
       esc(state.book.isbn13) +
       '">상세 보기</button>' +
       home +
+      directLink +
       "</div></article>"
     );
   }
@@ -2705,16 +3028,16 @@ window.MOCK = {
   /* ---------------------------------------------------------
      빈 상태 / 오류
      --------------------------------------------------------- */
-  function renderEmpty(query) {
-    document.title = "검색 결과 없음 — 책모아";
+  function renderBookEmpty(query) {
+    document.title = "책을 찾지 못했어요 — 책모아";
     app.innerHTML =
-      topBar("검색 결과") +
+      topBar("책 검색") +
       '<main class="page"><div class="state">' +
-      '<div class="state__emoji">📭</div>' +
+      '<div class="state__emoji">🔍</div>' +
       "<h2>‘" +
       esc(query) +
-      "’ 결과가 없어요</h2>" +
-      "<p>도서명을 짧게 줄이거나 저자명으로 다시 검색해 보세요.<br>선택한 도서관을 늘리는 것도 방법이에요.</p>" +
+      "’ 책을 찾지 못했어요</h2>" +
+      "<p>제목을 짧게 줄이거나 저자명·ISBN으로 다시 검색해 보세요.<br>카카오 책 검색에 없는 책은 ISBN으로 직접 찾을 수 있어요.</p>" +
       '<div class="suggest"><span class="suggest__label">이런 검색어는 어때요?</span>' +
       '<div class="chips" style="justify-content:center;margin-top:9px">' +
       SUGGESTIONS.map(function (word) {
@@ -2728,27 +3051,51 @@ window.MOCK = {
       }).join("") +
       "</div></div>" +
       '<div class="state__actions">' +
-      '<button class="btn btn--primary" data-action="home">되돌아가기</button>' +
+      '<button class="btn btn--primary" data-action="book-search">다시 검색</button>' +
+      '<button class="btn btn--ghost" data-action="home">처음으로</button>' +
+      "</div></div></main>";
+  }
+
+  function renderBookMissing(isbn) {
+    document.title = "책 정보를 찾지 못했어요 — 책모아";
+    app.innerHTML =
+      topBar("소장 확인") +
+      '<main class="page"><div class="state">' +
+      '<div class="state__emoji">📕</div>' +
+      "<h2>책 정보를 찾지 못했어요</h2>" +
+      "<p>ISBN " +
+      esc(isbn) +
+      " 책을 카카오 책 검색에서 확인하지 못했어요.<br>다른 판본을 골라 주세요.</p>" +
+      '<div class="state__actions">' +
+      '<button class="btn btn--primary" data-action="book-search">다른 책 찾기</button>' +
+      '<button class="btn btn--ghost" data-action="home">처음으로</button>' +
       "</div></div></main>";
   }
 
   function renderError(err) {
     var noKey = err.kind === "no_key";
+    var noKakao = err.kind === "no_kakao_key";
     document.title = "오류 — 책모아";
 
     app.innerHTML =
       topBar("문제가 생겼어요") +
       '<main class="page"><div class="state">' +
       '<div class="state__emoji">' +
-      (noKey ? "🔑" : "🔌") +
+      (noKakao ? "🔎" : noKey ? "🔑" : "🔌") +
       "</div>" +
       "<h2>" +
-      (noKey ? "API 키가 아직 없어요" : "검색에 실패했어요") +
+      (noKakao
+        ? "카카오 책 검색 키가 없어요"
+        : noKey
+          ? "API 키가 아직 없어요"
+          : "검색에 실패했어요") +
       "</h2>" +
       "<p>" +
-      (noKey
-        ? "Cloudflare Worker에 정보나루 인증키를 등록하면 실제 소장 데이터로 검색됩니다."
-        : esc(err.message || "잠시 후 다시 시도해 주세요.")) +
+      (noKakao
+        ? "Cloudflare Worker에 카카오 REST API 키(KAKAO_REST_API_KEY)를 등록하면 책 검색이 동작합니다."
+        : noKey
+          ? "Cloudflare Worker에 정보나루 인증키를 등록하면 실제 소장 데이터로 검색됩니다."
+          : esc(err.message || "잠시 후 다시 시도해 주세요.")) +
       "</p>" +
       '<div class="state__actions">' +
       '<button class="btn btn--primary" data-action="retry">다시 시도</button>' +
@@ -2761,44 +3108,64 @@ window.MOCK = {
   /* ---------------------------------------------------------
      상세
      --------------------------------------------------------- */
-  function showDetail(params) {
-    var isbn = params.get("isbn");
-    var snap = loadSnapshot();
-
-    /* 새로고침·딥링크로 바로 들어온 경우 */
-    if (!snap || !snap.books) {
-      if (state.mode === "demo") {
-        var demoBook = BOOKS.filter(function (book) {
-          return book.isbn13 === isbn;
-        })[0];
-        if (demoBook) {
-          state.selected = defaultSelection();
-          state.query = "";
-          state.books = [demoBook];
-          state.book = demoBook;
-          state.holdings = mergeHoldings(
-            core.holdingsMock(demoBook, state.selected)
-          );
-          renderDetail();
-          return;
-        }
-      }
+  async function showDetail(params, token) {
+    var isbn = (params.get("isbn") || "").replace(/[^0-9Xx]/g, "").toUpperCase();
+    if (!isbn) {
       go("#/");
       return;
     }
 
-    var book = snap.books.filter(function (b) {
-      return b.isbn13 === isbn;
-    })[0];
+    var snap = loadSnapshot();
+    var book =
+      snap && snap.books
+        ? snap.books.filter(function (item) {
+            return item.isbn13 === isbn;
+          })[0]
+        : null;
+
+    /* 새로고침·딥링크로 바로 들어온 경우 ISBN 으로 다시 확인한다. */
+    if (!book) {
+      if (state.mode === "demo") {
+        book =
+          BOOKS.filter(function (item) {
+            return item.isbn13 === isbn;
+          })[0] || null;
+      } else {
+        try {
+          book = await getBook(isbn);
+        } catch (err) {
+          book = null;
+        }
+      }
+    }
+    if (token !== undefined && token !== routeToken) return;
     if (!book) {
       go("#/");
       return;
     }
-    state.query = snap.query || "";
-    state.books = snap.books;
+
+    state.query = (snap && snap.query) || state.query;
+    state.books =
+      snap && snap.books && snap.books.length ? snap.books : [book];
+    if (
+      !state.books.some(function (item) {
+        return item.isbn13 === isbn;
+      })
+    ) {
+      state.books = [book];
+    }
     state.book = book;
     state.holdings =
-      snap.isbn === isbn && snap.holdings ? snap.holdings : [];
+      snap && snap.isbn === isbn && snap.holdings ? snap.holdings : [];
+
+    if (!state.holdings.length) {
+      try {
+        state.holdings = await getHoldings(book);
+      } catch (err) {
+        state.holdings = [];
+      }
+    }
+    if (token !== undefined && token !== routeToken) return;
     renderDetail();
   }
 
@@ -2894,18 +3261,21 @@ window.MOCK = {
     }
     state.query = query;
     addRecent(query);
-    var target = "#/r?q=" + encodeURIComponent(query) + libsParam();
-    go(target);
+    go("#/k?q=" + encodeURIComponent(query));
   }
 
   function selectBook(isbn) {
-    var target =
-      "#/r?q=" +
-      encodeURIComponent(state.query) +
-      "&isbn=" +
-      encodeURIComponent(isbn) +
-      libsParam();
-    go(target);
+    isbn = String(isbn || "").trim();
+    if (!isbn) return;
+    go(
+      "#/r?isbn=" + encodeURIComponent(isbn) + queryParam() + libsParam()
+    );
+  }
+
+  function clearCaches() {
+    cache.books.clear();
+    cache.holdings.clear();
+    bookCache.clear();
   }
 
   /* ---------------------------------------------------------
@@ -2929,12 +3299,6 @@ window.MOCK = {
     var el = event.target.closest("[data-action]");
     if (!el) return;
     var action = el.getAttribute("data-action");
-
-    if (action === "material") {
-      state.material = el.getAttribute("data-value");
-      renderHome();
-      return;
-    }
 
     if (action === "toggle-lib") {
       var id = el.getAttribute("data-id");
@@ -3009,22 +3373,25 @@ window.MOCK = {
       return;
     }
 
+    if (action === "book-search") {
+      go("#/k" + (state.query ? "?q=" + encodeURIComponent(state.query) : ""));
+      return;
+    }
+
     if (action === "detail") {
       go("#/b?isbn=" + encodeURIComponent(el.getAttribute("data-isbn")));
       return;
     }
 
     if (action === "retry") {
-      cache.search.clear();
-      cache.holdings.clear();
+      clearCaches();
       route();
       return;
     }
 
     if (action === "demo") {
       state.mode = "demo";
-      cache.search.clear();
-      cache.holdings.clear();
+      clearCaches();
       route();
       return;
     }
